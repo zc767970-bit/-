@@ -1,0 +1,11 @@
+{
+  "name": "الامان - مساحتنا الخاصة",
+  "description": "تطبيق الأمان الخاص بحمودي وسيمو: تتبع GPS مباشر، محادثة وصور وريكوردات، منبه طوارئ ورنة الفرحة، مقياس الحب وصناديق المفاجآت، والمناسبات والأسئلة اليومية.",
+  "requestFramePermissions": [
+    "geolocation",
+    "microphone"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
