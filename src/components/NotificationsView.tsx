@@ -21,15 +21,11 @@ import {
   Trash2,
   Share2,
   Smartphone,
-  Link,
-  Copy,
   Download,
   Shuffle,
-  ToggleLeft,
-  ToggleRight,
   Sun,
-  Moon,
-  Sunset,
+  ChevronRight,
+  Quote,
 } from 'lucide-react';
 import { ScheduledAlarm, SpontaneousPing, UserId, UserProfile, CouplePairing } from '../types';
 import { SPONTANEOUS_PINGS_SUGGESTIONS } from '../utils/storage';
@@ -85,9 +81,9 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
   onSendSafeArrival,
   onGoToTab,
 }) => {
-  const [activeSubTab, setActiveSubTab] = useState<'scheduler' | 'pairing' | 'presets' | 'history'>('scheduler');
+  const [activeSubTab, setActiveSubTab] = useState<'scheduler' | 'presets' | 'history' | 'pairing'>('scheduler');
 
-  // Scheduler Form State (By exact clock time)
+  // Scheduler Form State
   const [alarmMode, setAlarmMode] = useState<'exact_time' | 'random_window'>('exact_time');
   const [alarmTitle, setAlarmTitle] = useState('');
   const [alarmMessage, setAlarmMessage] = useState('');
@@ -98,7 +94,6 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
   const [alarmCategory, setAlarmCategory] = useState<ScheduledAlarm['category']>('love');
   const [showAddSuccess, setShowAddSuccess] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
-  const [showInstallGuide, setShowInstallGuide] = useState(false);
 
   // Common Clock Presets
   const clockPresets = [
@@ -123,19 +118,16 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
     let targetTimestamp: number | undefined;
 
     if (alarmMode === 'exact_time') {
-      scheduledForText = `${formatTimeToArabic(exactTimeVal)} ${repeatDaily ? '(يتكرر يومياً)' : '(اليوم)'}`;
-      // Calculate today's or tomorrow's timestamp for this exact time
+      scheduledForText = `${formatTimeToArabic(exactTimeVal)} ${repeatDaily ? '(يومياً)' : '(اليوم)'}`;
       const [h, m] = exactTimeVal.split(':').map(Number);
       const targetDate = new Date();
       targetDate.setHours(h, m, 0, 0);
       if (targetDate.getTime() <= Date.now()) {
-        targetDate.setDate(targetDate.getDate() + 1); // next day
+        targetDate.setDate(targetDate.getDate() + 1);
       }
       targetTimestamp = targetDate.getTime();
     } else {
-      // random_window by clock times (e.g. between 13:00 and 17:30)
-      scheduledForText = `موعد غير محدد: عشوائي بين ${formatTimeToArabic(timeFromVal)} و ${formatTimeToArabic(timeToVal)}`;
-      // Pick random minutes between timeFrom and timeTo
+      scheduledForText = `عشوائي بين ${formatTimeToArabic(timeFromVal)} و ${formatTimeToArabic(timeToVal)}`;
       const [h1, m1] = timeFromVal.split(':').map(Number);
       const [h2, m2] = timeToVal.split(':').map(Number);
       const startMinutes = h1 * 60 + m1;
@@ -179,61 +171,60 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
   };
 
   return (
-    <div className="space-y-6 pb-24">
-      {/* Permanent Pairing & Safety Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-emerald-950/80 via-slate-900 to-rose-950/80 border border-emerald-500/40 p-5 shadow-2xl backdrop-blur-xl">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 shrink-0">
-              <ShieldCheck className="w-6 h-6" />
+    <div className="space-y-3.5 sm:space-y-5 pb-20 sm:pb-12">
+      {/* Permanent Pairing & Safety Banner (Optimized for Mobile) */}
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-emerald-950/70 via-slate-900 to-rose-950/70 border border-emerald-500/30 p-3 sm:p-4.5 shadow-xl backdrop-blur-xl">
+        <div className="flex items-center justify-between gap-2.5">
+          <div className="flex items-center gap-2.5 min-w-0 flex-1">
+            <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 shrink-0">
+              <ShieldCheck className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30">
-                  ✅ متصلين ببعض دائماً وغير قابلين للانفصال
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-[10px] sm:text-[11px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30">
+                  ✅ متصلين دائماً
                 </span>
-                <span className="text-[10px] text-slate-400">كود: {pairing.pairCode}</span>
+                <span className="text-[10px] text-slate-400 font-mono hidden xs:inline">
+                  كود: {pairing.pairCode}
+                </span>
               </div>
-              <h2 className="text-xl font-bold text-white mt-1">
+              <h2 className="text-sm sm:text-lg font-bold text-white mt-0.5 truncate leading-tight">
                 تطبيق الأمان لحمودي & سيمو 🤍
               </h2>
-              <p className="text-xs text-slate-300">
-                مساحتكم الخاصة والمحفوظة دائماً على أجهزتكم بدون انقطاع
-              </p>
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              onClick={() => setActiveSubTab('pairing')}
-              className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-white/10 flex items-center gap-1.5 transition"
-            >
-              <Smartphone className="w-4 h-4 text-emerald-400" />
-              <span>تثبيت التطبيق ومشاركة الربط</span>
-            </button>
-          </div>
+          <button
+            onClick={() => setActiveSubTab('pairing')}
+            className="shrink-0 px-2.5 sm:px-3 py-1.5 rounded-xl bg-slate-800/90 hover:bg-slate-700 text-slate-200 text-[11px] sm:text-xs font-semibold border border-white/10 flex items-center gap-1 transition active:scale-95"
+            title="إعدادات الربط وتثبيت التطبيق"
+          >
+            <Smartphone className="w-3.5 h-3.5 text-emerald-400" />
+            <span className="hidden xs:inline">تثبيت التطبيق</span>
+            <span className="xs:hidden">تثبيت 📱</span>
+          </button>
         </div>
       </div>
 
-      {/* Main Action Triggers Grid (Good News, Emergency, Safe Arrival) */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      {/* 3 Quick Action Triggers (Ultra-compact 3-column grid on mobile: NO huge stacked cards!) */}
+      <div className="grid grid-cols-3 gap-2 sm:gap-3">
         {/* Good News Trigger */}
         <button
           onClick={onTriggerGoodNews}
-          className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-500/20 via-slate-900 to-amber-950/40 border border-amber-500/40 hover:border-amber-400 p-4 text-right transition shadow-xl hover:scale-[1.02]"
+          className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-500/20 via-slate-900 to-amber-950/40 border border-amber-500/40 hover:border-amber-400 p-2.5 sm:p-4 text-center sm:text-right transition shadow-md active:scale-95 flex flex-col sm:flex-row items-center sm:items-start justify-between gap-1 sm:gap-3"
         >
-          <div className="flex items-center justify-between">
-            <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400 group-hover:scale-110 transition">
-              <Sparkles className="w-5 h-5 fill-amber-400" />
-            </div>
-            <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-bold border border-amber-500/40">
+          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400 group-hover:scale-110 transition shrink-0">
+            <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 fill-amber-400" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <span className="hidden sm:inline-block text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30 mb-1">
               رنة الفرحة 🎉
             </span>
-          </div>
-          <div className="mt-3">
-            <h4 className="font-bold text-white text-base">حاجة حلوة حصلت!</h4>
-            <p className="text-xs text-amber-200/80 mt-1">
-              يرن فوراً بنغمة مبهجة عشان الطرف التاني يكلمك يباركلك ويسمع صوتك!
+            <h4 className="font-bold text-white text-[11px] sm:text-sm leading-tight truncate sm:whitespace-normal">
+              حاجة حلوة!
+            </h4>
+            <p className="text-[10px] text-amber-200/80 mt-0.5 leading-relaxed hidden sm:block">
+              رنين مبهج يوصل لحبيبتك في الحال!
             </p>
           </div>
         </button>
@@ -241,20 +232,20 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
         {/* Emergency SOS Trigger */}
         <button
           onClick={onTriggerEmergency}
-          className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-red-600/25 via-slate-900 to-red-950/50 border border-red-500/50 hover:border-red-400 p-4 text-right transition shadow-xl hover:scale-[1.02]"
+          className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-red-600/25 via-slate-900 to-red-950/40 border border-red-500/50 hover:border-red-400 p-2.5 sm:p-4 text-center sm:text-right transition shadow-md active:scale-95 flex flex-col sm:flex-row items-center sm:items-start justify-between gap-1 sm:gap-3"
         >
-          <div className="flex items-center justify-between">
-            <div className="w-10 h-10 rounded-xl bg-red-500/20 border border-red-500/40 flex items-center justify-center text-red-400 group-hover:scale-110 transition animate-pulse">
-              <AlertTriangle className="w-5 h-5 fill-red-500" />
-            </div>
-            <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-red-600/30 text-red-300 font-bold border border-red-500/50">
-              سارينة طوارئ 🚨
-            </span>
+          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-red-500/20 border border-red-500/40 flex items-center justify-center text-red-400 group-hover:scale-110 transition shrink-0 animate-pulse">
+            <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 fill-red-500" />
           </div>
-          <div className="mt-3">
-            <h4 className="font-bold text-white text-base">طوارئ SOS (إنذار عاجل)</h4>
-            <p className="text-xs text-red-200/80 mt-1">
-              يطلق سارينة ورنين صوتي عالي فوري ويبعت موقعك لو حصل أي ظرف طارئ.
+          <div className="min-w-0 flex-1">
+            <span className="hidden sm:inline-block text-[10px] px-2 py-0.5 rounded-full bg-red-600/30 text-red-300 font-bold border border-red-500/40 mb-1">
+              إنذار عاجل 🚨
+            </span>
+            <h4 className="font-bold text-white text-[11px] sm:text-sm leading-tight truncate sm:whitespace-normal">
+              طوارئ SOS
+            </h4>
+            <p className="text-[10px] text-red-200/80 mt-0.5 leading-relaxed hidden sm:block">
+              سارينة رنين وموقعك الفوري!
             </p>
           </div>
         </button>
@@ -262,216 +253,209 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
         {/* Safe Arrival */}
         <button
           onClick={onSendSafeArrival}
-          className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-600/20 via-slate-900 to-teal-950/40 border border-emerald-500/40 hover:border-emerald-400 p-4 text-right transition shadow-xl hover:scale-[1.02]"
+          className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-600/20 via-slate-900 to-teal-950/40 border border-emerald-500/40 hover:border-emerald-400 p-2.5 sm:p-4 text-center sm:text-right transition shadow-md active:scale-95 flex flex-col sm:flex-row items-center sm:items-start justify-between gap-1 sm:gap-3"
         >
-          <div className="flex items-center justify-between">
-            <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 group-hover:scale-110 transition">
-              <ShieldCheck className="w-5 h-5" />
-            </div>
-            <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/40">
-              طمأنينة فورية 🚗
-            </span>
+          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 group-hover:scale-110 transition shrink-0">
+            <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
-          <div className="mt-3">
-            <h4 className="font-bold text-white text-base">أنا وصلت بالسلامة</h4>
-            <p className="text-xs text-emerald-200/80 mt-1">
-              يبعت إشعار فوري لـ {partnerUser.name} يطمنها إنك وصلت بدون ما تبعت على الواتس.
+          <div className="min-w-0 flex-1">
+            <span className="hidden sm:inline-block text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30 mb-1">
+              طمأنينة 🚗
+            </span>
+            <h4 className="font-bold text-white text-[11px] sm:text-sm leading-tight truncate sm:whitespace-normal">
+              أنا وصلت!
+            </h4>
+            <p className="text-[10px] text-emerald-200/80 mt-0.5 leading-relaxed hidden sm:block">
+              إشعار سلامة سريع بدون واتساب.
             </p>
           </div>
         </button>
       </div>
 
-      {/* Sub Tabs Navigation */}
-      <div className="flex items-center gap-3 border-b border-white/10 pb-2 overflow-x-auto no-scrollbar">
+      {/* Sub Tabs Navigation (Touch-Friendly Pill Carousel on Mobile) */}
+      <div className="flex items-center gap-1.5 sm:gap-2 border-b border-white/10 pb-2 overflow-x-auto no-scrollbar scroll-smooth">
         <button
           onClick={() => setActiveSubTab('scheduler')}
-          className={`flex items-center gap-2 pb-2 text-sm font-bold transition relative shrink-0 ${
-            activeSubTab === 'scheduler' ? 'text-rose-400' : 'text-slate-400 hover:text-slate-200'
+          className={`flex items-center gap-1 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs sm:text-sm font-bold transition whitespace-nowrap shrink-0 active:scale-95 ${
+            activeSubTab === 'scheduler'
+              ? 'bg-rose-500 text-white shadow-md shadow-rose-950'
+              : 'bg-slate-850 text-slate-300 hover:bg-slate-800'
           }`}
         >
-          <Clock className="w-4 h-4" />
-          <span>مواعيد الإشعارات بالوقت ({scheduledAlarms.length})</span>
-          {activeSubTab === 'scheduler' && (
-            <span className="absolute bottom-0 inset-x-0 h-0.5 bg-rose-500 rounded-full" />
-          )}
-        </button>
-
-        <button
-          onClick={() => setActiveSubTab('pairing')}
-          className={`flex items-center gap-2 pb-2 text-sm font-bold transition relative shrink-0 ${
-            activeSubTab === 'pairing' ? 'text-rose-400' : 'text-slate-400 hover:text-slate-200'
-          }`}
-        >
-          <Smartphone className="w-4 h-4 text-emerald-400" />
-          <span>ربط الهاتفين وتثبيت التطبيق 📱</span>
-          {activeSubTab === 'pairing' && (
-            <span className="absolute bottom-0 inset-x-0 h-0.5 bg-rose-500 rounded-full" />
-          )}
+          <Clock className="w-3.5 h-3.5" />
+          <span>منبه بالوقت ({scheduledAlarms.length})</span>
         </button>
 
         <button
           onClick={() => setActiveSubTab('presets')}
-          className={`flex items-center gap-2 pb-2 text-sm font-bold transition relative shrink-0 ${
-            activeSubTab === 'presets' ? 'text-rose-400' : 'text-slate-400 hover:text-slate-200'
+          className={`flex items-center gap-1 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs sm:text-sm font-bold transition whitespace-nowrap shrink-0 active:scale-95 ${
+            activeSubTab === 'presets'
+              ? 'bg-pink-600 text-white shadow-md shadow-pink-950'
+              : 'bg-slate-850 text-slate-300 hover:bg-slate-800'
           }`}
         >
-          <Zap className="w-4 h-4" />
-          <span>إشعارات حب سريعة فورية</span>
-          {activeSubTab === 'presets' && (
-            <span className="absolute bottom-0 inset-x-0 h-0.5 bg-rose-500 rounded-full" />
-          )}
+          <Zap className="w-3.5 h-3.5 text-amber-300" />
+          <span>إشعارات سريعة</span>
         </button>
 
         <button
           onClick={() => setActiveSubTab('history')}
-          className={`flex items-center gap-2 pb-2 text-sm font-bold transition relative shrink-0 ${
-            activeSubTab === 'history' ? 'text-rose-400' : 'text-slate-400 hover:text-slate-200'
+          className={`flex items-center gap-1 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs sm:text-sm font-bold transition whitespace-nowrap shrink-0 active:scale-95 ${
+            activeSubTab === 'history'
+              ? 'bg-purple-600 text-white shadow-md shadow-purple-950'
+              : 'bg-slate-850 text-slate-300 hover:bg-slate-800'
           }`}
         >
-          <Calendar className="w-4 h-4" />
-          <span>سجل الإشعارات ({pingsHistory.length})</span>
-          {activeSubTab === 'history' && (
-            <span className="absolute bottom-0 inset-x-0 h-0.5 bg-rose-500 rounded-full" />
-          )}
+          <Calendar className="w-3.5 h-3.5" />
+          <span>السجل ({pingsHistory.length})</span>
+        </button>
+
+        <button
+          onClick={() => setActiveSubTab('pairing')}
+          className={`flex items-center gap-1 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs sm:text-sm font-bold transition whitespace-nowrap shrink-0 active:scale-95 ${
+            activeSubTab === 'pairing'
+              ? 'bg-emerald-600 text-white shadow-md shadow-emerald-950'
+              : 'bg-slate-850 text-slate-300 hover:bg-slate-800'
+          }`}
+        >
+          <Smartphone className="w-3.5 h-3.5 text-emerald-300" />
+          <span>ربط الهاتفين 📱</span>
         </button>
       </div>
 
-      {/* SUBTAB 1: EXACT CLOCK-TIME SCHEDULER */}
+      {/* SUBTAB 1: EXACT CLOCK-TIME SCHEDULER & ALARMS */}
       {activeSubTab === 'scheduler' && (
-        <div className="space-y-6">
-          {/* Quick Clock Presets Buttons */}
-          <div className="p-4 rounded-3xl bg-slate-900/80 border border-white/10 space-y-2">
-            <span className="text-xs font-bold text-slate-300 block flex items-center gap-1.5">
+        <div className="space-y-3.5 sm:space-y-5">
+          {/* Quick Clock Presets: Smooth Horizontal Chip Bar */}
+          <div className="p-3 sm:p-4 rounded-2xl bg-slate-900/80 border border-white/10 space-y-2">
+            <span className="text-[11px] sm:text-xs font-bold text-slate-300 flex items-center gap-1.5">
               <Sun className="w-3.5 h-3.5 text-amber-400" />
-              اختيار سريع لمواعيد شائعة بالوقت:
+              أوقات شائعة جاهزة (اضغط لاختيار موعد فوري):
             </span>
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+            <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar pb-1">
               {clockPresets.map((p, idx) => (
                 <button
                   key={idx}
                   type="button"
                   onClick={() => handleApplyClockPreset(p)}
-                  className="p-2.5 rounded-2xl bg-slate-850 hover:bg-rose-950/40 hover:border-rose-500/40 border border-white/5 text-right transition"
+                  className="px-2.5 py-1.5 rounded-xl bg-slate-850 hover:bg-rose-950/50 hover:border-rose-500/50 border border-white/5 text-right transition active:scale-95 shrink-0 flex items-center gap-1.5"
                 >
-                  <span className="text-xs font-black text-rose-300 block">{p.label}</span>
-                  <span className="text-[11px] text-slate-400 block truncate">{p.title}</span>
+                  <span className="text-xs">{p.icon}</span>
+                  <span className="text-xs font-black text-rose-300 font-mono">{p.label}</span>
+                  <span className="text-[11px] text-slate-300 truncate max-w-[120px]">
+                    {p.title.split(' ')[0]} {p.title.split(' ')[1]}
+                  </span>
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Form to Set Alarm by Clock Time */}
-          <div className="rounded-3xl bg-slate-900/90 border border-rose-500/30 p-6 shadow-2xl space-y-5">
-            <div>
-              <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                <Clock className="w-5 h-5 text-rose-400" />
-                تحديد موعد المنبه بالوقت (بالساعة والدقيقة وليس بعد كذا) ⏰
-              </h3>
-              <p className="text-xs text-slate-300 mt-0.5">
-                حدد الوقت الذي ترغب أن يرن فيه المنبه عند {partnerUser.name} بالضبط بالساعة والدقيقة!
-              </p>
+          {/* Form to Set Alarm by Clock Time (Mobile-Perfect Layout) */}
+          <div className="rounded-2xl sm:rounded-3xl bg-slate-900/90 border border-rose-500/30 p-3.5 sm:p-5 shadow-2xl space-y-3 sm:space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm sm:text-base font-bold text-white flex items-center gap-1.5">
+                  <Clock className="w-4 h-4 text-rose-400" />
+                  ضبط منبه بالوقت المحدد (ساعة ودقيقة) ⏰
+                </h3>
+                <p className="text-[11px] sm:text-xs text-slate-400 mt-0.5 leading-snug">
+                  يرن عند {partnerUser.name} بالوقت المضبوط بالساعة والدقيقة!
+                </p>
+              </div>
             </div>
 
-            {/* Timing Mode: Exact Clock Time or Random Clock Time Window */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/* Timing Mode Segmented Control (Side by side on all screens) */}
+            <div className="grid grid-cols-2 gap-2 p-1 bg-slate-950/70 rounded-2xl border border-white/5">
               <button
                 type="button"
                 onClick={() => setAlarmMode('exact_time')}
-                className={`p-4 rounded-2xl border text-right transition ${
+                className={`py-2 px-2 rounded-xl text-center transition flex items-center justify-center gap-1.5 ${
                   alarmMode === 'exact_time'
-                    ? 'bg-rose-950/60 border-rose-400 text-white ring-1 ring-rose-400 shadow-lg'
-                    : 'bg-slate-850 border-white/5 text-slate-300 hover:bg-slate-800'
+                    ? 'bg-rose-600 text-white font-bold shadow-md'
+                    : 'text-slate-400 hover:text-white'
                 }`}
               >
-                <div className="flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-rose-400" />
-                  <span className="font-bold text-sm">موعد محدد بالساعة والدقيقة ⏰</span>
-                </div>
-                <p className="text-xs text-slate-400 mt-1">
-                  يرن في وقت محدد بالضبط (مثال: الساعة 04:30 عصراً أو 11:00 مساءً)
-                </p>
+                <Clock className="w-3.5 h-3.5" />
+                <span className="text-xs">موعد محدد بالضبط</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setAlarmMode('random_window')}
-                className={`p-4 rounded-2xl border text-right transition ${
+                className={`py-2 px-2 rounded-xl text-center transition flex items-center justify-center gap-1.5 ${
                   alarmMode === 'random_window'
-                    ? 'bg-purple-950/60 border-purple-400 text-white ring-1 ring-purple-400 shadow-lg'
-                    : 'bg-slate-850 border-white/5 text-slate-300 hover:bg-slate-800'
+                    ? 'bg-purple-600 text-white font-bold shadow-md'
+                    : 'text-slate-400 hover:text-white'
                 }`}
               >
-                <div className="flex items-center gap-2">
-                  <Shuffle className="w-4 h-4 text-purple-400" />
-                  <span className="font-bold text-sm">موعد غير محدد بين ساعتين 🎲</span>
-                </div>
-                <p className="text-xs text-slate-400 mt-1">
-                  يرن في وقت عشوائي مفاجئ بين ساعة وساعة أخرى (مثال: بين 01:00 م و 05:00 م)
-                </p>
+                <Shuffle className="w-3.5 h-3.5" />
+                <span className="text-xs">عشوائي بين ساعتين</span>
               </button>
             </div>
 
             {/* Exact Time Pickers */}
             {alarmMode === 'exact_time' ? (
-              <div className="p-4 rounded-2xl bg-rose-950/20 border border-rose-500/20 space-y-3">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
-                  <div>
-                    <label className="text-xs font-bold text-rose-300 block mb-1">
-                      اختر الساعة والدقيقة للرنين:
+              <div className="p-3 rounded-2xl bg-rose-950/20 border border-rose-500/20 space-y-2">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                  <div className="flex-1">
+                    <label className="text-[11px] font-bold text-rose-300 block mb-1">
+                      الساعة والدقيقة للرنين:
                     </label>
-                    <input
-                      type="time"
-                      value={exactTimeVal}
-                      onChange={(e) => setExactTimeVal(e.target.value)}
-                      className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-base text-white font-bold focus:outline-none focus:border-rose-500"
-                    />
-                    <span className="text-[11px] text-rose-300 mt-1 block">
-                      يرن: {formatTimeToArabic(exactTimeVal)}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="time"
+                        value={exactTimeVal}
+                        onChange={(e) => setExactTimeVal(e.target.value)}
+                        className="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-base text-white font-bold text-center focus:outline-none focus:border-rose-500 w-36"
+                      />
+                      <span className="text-xs font-bold text-rose-200">
+                        {formatTimeToArabic(exactTimeVal)}
+                      </span>
+                    </div>
                   </div>
 
-                  <div className="flex items-center gap-2 pt-2 sm:pt-4">
+                  <div className="flex items-center gap-2 pt-1 sm:pt-0">
                     <input
                       type="checkbox"
                       id="repeatCheckExact"
                       checked={repeatDaily}
                       onChange={(e) => setRepeatDaily(e.target.checked)}
-                      className="w-4 h-4 rounded text-rose-600 bg-slate-800 border-slate-700"
+                      className="w-4 h-4 rounded text-rose-600 bg-slate-800 border-slate-700 cursor-pointer"
                     />
-                    <label htmlFor="repeatCheckExact" className="text-xs text-slate-200 cursor-pointer font-medium">
-                      تكرار المنبه يومياً في نفس هذا الوقت 🔄
+                    <label htmlFor="repeatCheckExact" className="text-xs text-slate-200 cursor-pointer font-medium select-none">
+                      تكرار المنبه يومياً 🔄
                     </label>
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="p-4 rounded-2xl bg-purple-950/20 border border-purple-500/20 space-y-3">
-                <label className="text-xs font-bold text-purple-300 block">
-                  حدد النطاق بالوقت (سيرن في وقت غير محدد ومفاجئ بينهما):
+              <div className="p-3 rounded-2xl bg-purple-950/20 border border-purple-500/20 space-y-2">
+                <label className="text-[11px] font-bold text-purple-300 block">
+                  حدد النطاق الزمني (سيرن مفاجئ في وقت غير محدد بينهما):
                 </label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <span className="text-[11px] text-slate-300 block mb-1">من الساعة:</span>
+                    <span className="text-[10px] text-slate-400 block mb-1">من الساعة:</span>
                     <input
                       type="time"
                       value={timeFromVal}
                       onChange={(e) => setTimeFromVal(e.target.value)}
-                      className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white"
+                      className="w-full bg-slate-800 border border-slate-700 rounded-xl px-2.5 py-1.5 text-sm text-white text-center"
                     />
-                    <span className="text-[10px] text-purple-300 mt-0.5 block">
+                    <span className="text-[10px] text-purple-300 mt-0.5 block truncate">
                       {formatTimeToArabic(timeFromVal)}
                     </span>
                   </div>
 
                   <div>
-                    <span className="text-[11px] text-slate-300 block mb-1">إلى الساعة:</span>
+                    <span className="text-[10px] text-slate-400 block mb-1">إلى الساعة:</span>
                     <input
                       type="time"
                       value={timeToVal}
                       onChange={(e) => setTimeToVal(e.target.value)}
-                      className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white"
+                      className="w-full bg-slate-800 border border-slate-700 rounded-xl px-2.5 py-1.5 text-sm text-white text-center"
                     />
-                    <span className="text-[10px] text-purple-300 mt-0.5 block">
+                    <span className="text-[10px] text-purple-300 mt-0.5 block truncate">
                       {formatTimeToArabic(timeToVal)}
                     </span>
                   </div>
@@ -480,47 +464,48 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
             )}
 
             {/* Title & Message */}
-            <div className="space-y-3">
+            <div className="space-y-2.5">
               <div>
-                <label className="text-xs text-slate-300 block mb-1">عنوان المنبه أو التنبيه:</label>
+                <label className="text-xs text-slate-300 block mb-1 font-medium">عنوان المنبه:</label>
                 <input
                   type="text"
                   value={alarmTitle}
                   onChange={(e) => setAlarmTitle(e.target.value)}
                   placeholder="مثال: منبه شرب مياه، وحشتيني، مكالمة السهرة..."
-                  className="w-full bg-slate-800 border border-slate-700 focus:border-rose-500 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none"
+                  className="w-full bg-slate-800 border border-slate-700 focus:border-rose-500 rounded-xl px-3 py-2 text-sm text-white focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="text-xs text-slate-300 block mb-1">رسالة التنبيه:</label>
+                <label className="text-xs text-slate-300 block mb-1 font-medium">رسالة المنبه:</label>
                 <textarea
                   value={alarmMessage}
                   onChange={(e) => setAlarmMessage(e.target.value)}
                   placeholder="اكتب رسالة تظهر أول ما يرن المنبه..."
                   rows={2}
-                  className="w-full bg-slate-800 border border-slate-700 focus:border-rose-500 rounded-xl p-3 text-sm text-white focus:outline-none"
+                  className="w-full bg-slate-800 border border-slate-700 focus:border-rose-500 rounded-xl p-2.5 text-sm text-white focus:outline-none leading-relaxed"
                 />
               </div>
 
-              <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-slate-400">التصنيف:</span>
+              {/* Categories & Submit Button (Mobile Optimized) */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-1">
+                <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1">
+                  <span className="text-[11px] text-slate-400 shrink-0">النوع:</span>
                   {(['love', 'care', 'surprise', 'joke'] as const).map((cat) => (
                     <button
                       key={cat}
                       type="button"
                       onClick={() => setAlarmCategory(cat)}
-                      className={`text-[11px] px-2.5 py-1 rounded-xl transition ${
+                      className={`text-[11px] px-2.5 py-1 rounded-xl transition shrink-0 ${
                         alarmCategory === cat
-                          ? 'bg-rose-500/30 text-rose-300 border border-rose-500/50'
+                          ? 'bg-rose-500 text-white font-bold shadow'
                           : 'bg-slate-800 text-slate-400 hover:text-white'
                       }`}
                     >
-                      {cat === 'love' && 'حب وغرام ❤️'}
-                      {cat === 'care' && 'اهتمام وصحة 🥤'}
+                      {cat === 'love' && 'حب ❤️'}
+                      {cat === 'care' && 'اهتمام 🥤'}
                       {cat === 'surprise' && 'مفاجأة ✨'}
-                      {cat === 'joke' && 'مرح وضحك 🌸'}
+                      {cat === 'joke' && 'مرح 🌸'}
                     </button>
                   ))}
                 </div>
@@ -529,7 +514,7 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
                   type="button"
                   onClick={handleCreateAlarm}
                   disabled={!alarmTitle.trim()}
-                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 disabled:opacity-40 text-white font-bold text-xs shadow-lg transition flex items-center gap-1.5"
+                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 disabled:opacity-40 text-white font-bold text-xs sm:text-sm shadow-lg transition flex items-center justify-center gap-1.5 active:scale-95"
                 >
                   <Plus className="w-4 h-4" />
                   حفظ وتفعيل المنبه بالوقت ⏰
@@ -537,175 +522,128 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
               </div>
 
               {showAddSuccess && (
-                <div className="p-3 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs flex items-center gap-2 animate-in fade-in duration-300">
-                  <Check className="w-4 h-4" />
-                  تم حفظ المنبه بالوقت المحدد! هيرن عند {partnerUser.name} بالوقت المضبوط 🔔🤍
+                <div className="p-2.5 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs flex items-center gap-2 animate-in fade-in duration-300">
+                  <Check className="w-4 h-4 shrink-0" />
+                  <span>تم حفظ المنبه بالوقت بنجاح! هيرن عند {partnerUser.name} في الموعد المحدد 🔔🤍</span>
                 </div>
               )}
             </div>
           </div>
 
-          {/* List of Active Alarms */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <h4 className="font-bold text-white text-base flex items-center gap-2">
+          {/* List of Active Alarms (RESTRUCTURED FOR FLAWLESS MOBILE & DESKTOP ALIGNMENT) */}
+          <div className="space-y-2.5 sm:space-y-3">
+            <div className="flex items-center justify-between px-0.5">
+              <h4 className="font-bold text-white text-xs sm:text-sm flex items-center gap-1.5">
                 <Clock className="w-4 h-4 text-rose-400" />
                 المنبهات المفعلة حالياً بالوقت ({scheduledAlarms.length}):
               </h4>
-              <span className="text-xs text-slate-400">اضغط "رنة تجريبية" لاختبار الصوت فوراً</span>
+              <span className="text-[10px] sm:text-[11px] text-slate-400">
+                رنة صوتية فورية
+              </span>
             </div>
 
-            <div className="space-y-3">
-              {scheduledAlarms.map((alarm) => (
-                <div
-                  key={alarm.id}
-                  className={`p-4 rounded-2xl border transition-all ${
-                    alarm.active
-                      ? 'bg-slate-900/80 border-rose-500/30 shadow-lg'
-                      : 'bg-slate-900/40 border-white/5 opacity-60'
-                  }`}
-                >
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <h5 className="font-bold text-white text-sm">{alarm.title}</h5>
-                        <span className="text-[10px] px-2 py-0.5 rounded-full font-bold border bg-rose-500/20 text-rose-300 border-rose-500/30">
-                          {alarm.scheduledForText}
-                        </span>
+            {scheduledAlarms.length === 0 ? (
+              <div className="p-6 rounded-2xl bg-slate-900/60 border border-dashed border-slate-700 text-center text-slate-400 text-xs">
+                مفيش منبهات مضافة حالياً.. حدد موعد بالوقت فوق واضغط حفظ! ⏰
+              </div>
+            ) : (
+              <div className="space-y-2 sm:space-y-2.5">
+                {scheduledAlarms.map((alarm) => (
+                  <div
+                    key={alarm.id}
+                    className={`rounded-2xl p-3 sm:p-4 border transition-all space-y-2.5 ${
+                      alarm.active
+                        ? 'bg-slate-900/90 border-rose-500/30 shadow-lg'
+                        : 'bg-slate-900/50 border-white/5 opacity-60'
+                    }`}
+                  >
+                    {/* Header Row: Category Icon + Title + Time Badge + Active Toggle */}
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-start gap-2.5 min-w-0 flex-1">
+                        <div className="w-8 h-8 rounded-xl bg-rose-500/15 border border-rose-500/30 flex items-center justify-center text-sm shrink-0 mt-0.5">
+                          {alarm.category === 'care' ? '🥤' : alarm.category === 'surprise' ? '✨' : alarm.category === 'joke' ? '🌸' : '❤️'}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <h5 className="font-bold text-white text-xs sm:text-sm leading-tight break-words">
+                            {alarm.title}
+                          </h5>
+                          <div className="flex flex-wrap items-center gap-1 mt-1">
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-rose-500/20 text-rose-300 border border-rose-500/30 flex items-center gap-1 whitespace-nowrap">
+                              <Clock className="w-2.5 h-2.5 text-rose-400" />
+                              {alarm.scheduledForText}
+                            </span>
+                            {alarm.repeatDaily && (
+                              <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-slate-800 text-slate-300 border border-white/5 whitespace-nowrap">
+                                🔄 يومياً
+                              </span>
+                            )}
+                          </div>
+                        </div>
                       </div>
-                      <p className="text-xs text-slate-300">{alarm.message}</p>
-                    </div>
 
-                    <div className="flex items-center gap-2 shrink-0">
-                      <button
-                        onClick={() => onTriggerAlarmNow(alarm)}
-                        className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-rose-600 text-slate-200 hover:text-white text-xs font-semibold transition border border-white/10 flex items-center gap-1"
-                        title="تجربة رنين المنبه الآن"
-                      >
-                        <Volume2 className="w-3.5 h-3.5" />
-                        <span>رنة تجريبية</span>
-                      </button>
-
+                      {/* Active Status & Toggle Switch */}
                       <button
                         onClick={() => onToggleScheduledAlarm(alarm.id)}
-                        className={`p-1.5 rounded-xl transition ${
-                          alarm.active ? 'text-emerald-400' : 'text-slate-500'
+                        className={`shrink-0 flex items-center gap-1 px-2 py-1 rounded-xl text-[10px] sm:text-xs font-bold transition active:scale-95 ${
+                          alarm.active
+                            ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                            : 'bg-slate-800 text-slate-400 border border-white/5'
                         }`}
                         title={alarm.active ? 'تعطيل مؤقت' : 'تفعيل'}
                       >
-                        {alarm.active ? <ToggleRight className="w-6 h-6" /> : <ToggleLeft className="w-6 h-6" />}
+                        <span className={`w-2 h-2 rounded-full ${alarm.active ? 'bg-emerald-400 animate-pulse' : 'bg-slate-500'}`} />
+                        <span>{alarm.active ? 'مفعل' : 'متوقف'}</span>
+                      </button>
+                    </div>
+
+                    {/* Middle: Romantic Message Bubble */}
+                    {alarm.message && (
+                      <div className="p-2 sm:p-2.5 rounded-xl bg-slate-850/80 border border-white/5 text-[11px] sm:text-xs text-slate-200 leading-relaxed break-words flex items-start gap-1.5">
+                        <Quote className="w-3 h-3 text-rose-400 shrink-0 mt-0.5" />
+                        <span className="flex-1">{alarm.message}</span>
+                      </div>
+                    )}
+
+                    {/* Footer Row: Actions (Test Ring & Delete cleanly separated) */}
+                    <div className="pt-1.5 border-t border-white/5 flex items-center justify-between gap-2">
+                      <button
+                        onClick={() => onTriggerAlarmNow(alarm)}
+                        className="px-2.5 py-1 rounded-xl bg-slate-800 hover:bg-rose-600 text-slate-200 hover:text-white text-[11px] sm:text-xs font-semibold transition border border-white/10 flex items-center gap-1 active:scale-95"
+                        title="تجربة رنين المنبه الآن"
+                      >
+                        <Volume2 className="w-3.5 h-3.5 text-rose-400" />
+                        <span>تجربة رنين الآن 🔔</span>
                       </button>
 
                       <button
                         onClick={() => onDeleteScheduledAlarm(alarm.id)}
-                        className="p-1.5 text-slate-400 hover:text-red-400 rounded-xl hover:bg-red-500/10 transition"
+                        className="p-1 sm:px-2 sm:py-1 text-slate-400 hover:text-red-400 rounded-lg hover:bg-red-500/10 transition text-xs flex items-center gap-1 active:scale-95"
                         title="حذف المنبه"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span className="hidden xs:inline">حذف</span>
                       </button>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}
 
-      {/* SUBTAB 2: PAIRING & PWA INSTALLATION */}
-      {activeSubTab === 'pairing' && (
-        <div className="space-y-6">
-          <div className="rounded-3xl bg-slate-900 border border-emerald-500/40 p-6 shadow-2xl space-y-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <span className="text-xs font-bold text-emerald-400 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30">
-                  ربط دائم وثابت 100%
-                </span>
-                <h3 className="text-xl font-bold text-white mt-2">
-                  ربط هاتفك بهاتف حبيبتك ليفضل شغال دايماً بدون انقطاع 📱🤍
-                </h3>
-                <p className="text-xs text-slate-300 mt-1">
-                  حمّلوا التطبيق على الشاشة الرئيسية في موبايلك وموبايلها ليفضل شغال دائماً ومرتبطين ببعض للأبد!
-                </p>
-              </div>
-            </div>
-
-            {/* Pairing Code Card */}
-            <div className="p-5 rounded-2xl bg-slate-850 border border-white/10 space-y-4">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                <div>
-                  <span className="text-xs text-slate-400 block">كود الأمان والربط الدائم:</span>
-                  <span className="text-2xl font-black text-rose-400 tracking-wider font-mono">
-                    {pairing.pairCode}
-                  </span>
-                </div>
-
-                <button
-                  onClick={handleCopyPairLink}
-                  className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 text-white font-bold text-xs transition shadow-lg flex items-center gap-2"
-                >
-                  <Share2 className="w-4 h-4" />
-                  <span>{copiedLink ? 'تم نسخ الرابط لحبيبتك!' : 'نسخ رابط الربط المباشر لحبيبتك 🔗'}</span>
-                </button>
-              </div>
-              <p className="text-xs text-slate-300 leading-relaxed">
-                ابعت الرابط ده لـ {partnerUser.name} على الواتس.. أول ما تفتحه هيفتح التطبيق فوراً متصل بيكي وبحسابك ومش هيتشال نهائياً!
-              </p>
-            </div>
-
-            {/* How to install on Mobile Homescreen */}
-            <div className="space-y-3">
-              <h4 className="font-bold text-white text-sm flex items-center gap-2">
-                <Download className="w-4 h-4 text-emerald-400" />
-                طريقة تثبيت التطبيق على الموبايل ليبقى شغال دايماً كأنه تطبيق من المتجر:
-              </h4>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* iPhone Safari */}
-                <div className="p-4 rounded-2xl bg-slate-850/80 border border-white/5 space-y-2">
-                  <h5 className="font-bold text-white text-xs flex items-center gap-1.5">
-                    <Smartphone className="w-4 h-4 text-sky-400" />
-                    على الآيفون (iPhone / Safari):
-                  </h5>
-                  <ol className="text-xs text-slate-300 space-y-1 list-decimal list-inside leading-relaxed">
-                    <li>افتح الرابط في متصفح Safari.</li>
-                    <li>اضغط على زر المشاركة (المربع اللي طالع منه سهم ⬆️ بالأسفل).</li>
-                    <li>اختر <strong>"إضافة إلى الصفحة الرئيسية" (Add to Home Screen)</strong>.</li>
-                    <li>هيظهر التطبيق بأيقونته واسم "الامان" ويفضل شغال دايماً!</li>
-                  </ol>
-                </div>
-
-                {/* Android Chrome */}
-                <div className="p-4 rounded-2xl bg-slate-850/80 border border-white/5 space-y-2">
-                  <h5 className="font-bold text-white text-xs flex items-center gap-1.5">
-                    <Smartphone className="w-4 h-4 text-emerald-400" />
-                    على الأندرويد (Android / Chrome):
-                  </h5>
-                  <ol className="text-xs text-slate-300 space-y-1 list-decimal list-inside leading-relaxed">
-                    <li>افتح الرابط في متصفح Chrome.</li>
-                    <li>اضغط على الثلاث نقاط بالأعلى (⋮).</li>
-                    <li>اختر <strong>"تثبيت التطبيق" (Install App)</strong> أو "إضافة إلى الشاشة الرئيسية".</li>
-                    <li>سيتم تثبيته كتطبيق حقيقي على الموبايل ويفضل شغال دايماً!</li>
-                  </ol>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* SUBTAB 3: PRESETS */}
+      {/* SUBTAB 2: PRESETS (FAST 1-TAP LOVE PINGS) */}
       {activeSubTab === 'presets' && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="font-bold text-white text-base flex items-center gap-2">
+        <div className="space-y-3">
+          <div className="flex items-center justify-between px-0.5">
+            <h3 className="font-bold text-white text-xs sm:text-sm flex items-center gap-1.5">
               <Heart className="w-4 h-4 text-rose-400 fill-rose-400" />
               إشعارات حب سريعة بنقرة واحدة (بتوصل فوراً لـ {partnerUser.name}):
             </h3>
-            <span className="text-xs text-slate-400">اضغط للإرسال الفوري</span>
+            <span className="text-[10px] text-slate-400">إرسال فوري</span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-2.5">
             {SPONTANEOUS_PINGS_SUGGESTIONS.map((preset, idx) => (
               <button
                 key={idx}
@@ -713,21 +651,21 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
                   onSendPing(preset.title, preset.message, preset.type);
                   playLovePingSound();
                 }}
-                className="p-4 rounded-2xl bg-slate-900/80 hover:bg-rose-950/40 hover:border-rose-500/50 border border-white/10 text-right transition group flex flex-col justify-between shadow-lg"
+                className="p-3 rounded-2xl bg-slate-900/80 hover:bg-rose-950/40 hover:border-rose-500/50 border border-white/10 text-right transition group flex flex-col justify-between shadow-md active:scale-98 space-y-2"
               >
                 <div className="flex items-center justify-between gap-2">
-                  <span className="p-2 rounded-xl bg-rose-500/20 text-rose-300 group-hover:scale-110 transition">
-                    <Heart className="w-4 h-4 fill-rose-400 text-rose-400" />
+                  <span className="p-1.5 rounded-xl bg-rose-500/20 text-rose-300 group-hover:scale-110 transition">
+                    <Heart className="w-3.5 h-3.5 fill-rose-400 text-rose-400" />
                   </span>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-300">
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-rose-300 font-bold border border-rose-500/20">
                     إرسال فوري 🚀
                   </span>
                 </div>
-                <div className="mt-3">
-                  <h5 className="font-bold text-white text-xs sm:text-sm group-hover:text-rose-200 transition">
+                <div>
+                  <h5 className="font-bold text-white text-xs group-hover:text-rose-200 transition">
                     {preset.title}
                   </h5>
-                  <p className="text-xs text-slate-400 mt-1 line-clamp-2 leading-relaxed">
+                  <p className="text-[11px] text-slate-400 mt-1 line-clamp-2 leading-relaxed">
                     {preset.message}
                   </p>
                 </div>
@@ -737,20 +675,20 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
         </div>
       )}
 
-      {/* SUBTAB 4: HISTORY OF NOTIFICATIONS */}
+      {/* SUBTAB 3: HISTORY OF NOTIFICATIONS (CLEAN MOBILE STACK) */}
       {activeSubTab === 'history' && (
         <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h4 className="font-bold text-white text-sm flex items-center gap-2">
+          <div className="flex items-center justify-between px-0.5">
+            <h4 className="font-bold text-white text-xs sm:text-sm flex items-center gap-1.5">
               <Clock className="w-4 h-4 text-rose-400" />
               سجل التنبيهات وإشعارات الحب المتبادلة بينكما:
             </h4>
-            <span className="text-xs text-slate-400">{pingsHistory.length} إشعار مسجل</span>
+            <span className="text-[10px] text-slate-400">{pingsHistory.length} مسجل</span>
           </div>
 
           {pingsHistory.length === 0 ? (
-            <div className="p-8 rounded-3xl bg-slate-900/60 border border-dashed border-slate-700 text-center text-slate-400 text-xs">
-              لسه مفيش إشعارات مسجلة.. اضغط على أي إشعار جاهز فوق وابعت لحبيبتك دلوقتي! 💌
+            <div className="p-6 rounded-2xl bg-slate-900/60 border border-dashed border-slate-700 text-center text-slate-400 text-xs">
+              لسه مفيش إشعارات مسجلة.. اضغط على أي إشعار جاهز وابعت لحبيبتك دلوقتي! 💌
             </div>
           ) : (
             <div className="space-y-2">
@@ -759,17 +697,17 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
                 return (
                   <div
                     key={ping.id}
-                    className="p-4 rounded-2xl bg-slate-900/80 border border-white/5 hover:border-rose-500/30 transition flex items-start justify-between gap-3"
+                    className="p-3 rounded-2xl bg-slate-900/80 border border-white/5 hover:border-rose-500/30 transition flex flex-col sm:flex-row sm:items-center justify-between gap-2"
                   >
-                    <div className="flex items-start gap-3">
-                      <div className="p-2.5 rounded-xl bg-rose-500/20 text-rose-400 shrink-0 mt-0.5">
-                        <BellRing className="w-4 h-4" />
+                    <div className="flex items-start gap-2.5 min-w-0 flex-1">
+                      <div className="p-2 rounded-xl bg-rose-500/20 text-rose-400 shrink-0 mt-0.5">
+                        <BellRing className="w-3.5 h-3.5" />
                       </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h5 className="font-bold text-white text-sm">{ping.title}</h5>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <h5 className="font-bold text-white text-xs">{ping.title}</h5>
                           <span
-                            className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                            className={`text-[9px] px-2 py-0.5 rounded-full font-bold ${
                               isSentByMe
                                 ? 'bg-sky-500/20 text-sky-300 border border-sky-500/30'
                                 : 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
@@ -778,20 +716,21 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
                             {isSentByMe ? 'مرسل مني' : `مرسل من ${partnerUser.name}`}
                           </span>
                         </div>
-                        <p className="text-xs text-slate-300 mt-1 leading-relaxed">
+                        <p className="text-[11px] text-slate-300 mt-0.5 leading-relaxed break-words">
                           {ping.message}
                         </p>
                       </div>
                     </div>
 
-                    <div className="text-right shrink-0">
-                      <span className="text-[10px] text-slate-400 block">{ping.timestamp}</span>
+                    <div className="flex items-center justify-between sm:justify-end gap-2 pt-1.5 sm:pt-0 border-t sm:border-t-0 border-white/5 shrink-0">
+                      <span className="text-[10px] text-slate-400 font-mono">{ping.timestamp}</span>
                       <button
                         onClick={() => playLovePingSound()}
-                        className="p-1.5 mt-1 text-slate-400 hover:text-rose-400 rounded-lg transition"
+                        className="px-2 py-1 rounded-lg bg-slate-800 text-slate-300 hover:text-rose-300 text-[11px] flex items-center gap-1 transition active:scale-95"
                         title="تشغيل صوت الرنة"
                       >
-                        <Volume2 className="w-3.5 h-3.5" />
+                        <Volume2 className="w-3 h-3 text-rose-400" />
+                        <span>رنة</span>
                       </button>
                     </div>
                   </div>
@@ -802,40 +741,120 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
         </div>
       )}
 
-      {/* Quick Links to Other Features */}
-      <div className="rounded-3xl bg-slate-900/40 border border-white/5 p-4 flex flex-wrap items-center justify-between gap-3 text-xs">
-        <span className="text-slate-400 font-medium">تنقل سريع إلى:</span>
-        <div className="flex flex-wrap items-center gap-2">
+      {/* SUBTAB 4: PAIRING & PWA INSTALLATION */}
+      {activeSubTab === 'pairing' && (
+        <div className="space-y-3.5 sm:space-y-5">
+          <div className="rounded-2xl sm:rounded-3xl bg-slate-900 border border-emerald-500/40 p-4 sm:p-5 shadow-2xl space-y-3.5 sm:space-y-4">
+            <div>
+              <span className="text-[11px] font-bold text-emerald-400 px-2.5 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/30">
+                ربط دائم وثابت 100%
+              </span>
+              <h3 className="text-sm sm:text-base font-bold text-white mt-1.5 leading-snug">
+                ربط هاتفك بهاتف حبيبتك ليفضل شغال دايماً بدون انقطاع 📱🤍
+              </h3>
+              <p className="text-xs text-slate-300 mt-1 leading-relaxed">
+                حمّلوا التطبيق على الشاشة الرئيسية في موبايلك وموبايلها ليفضل شغال دائماً ومرتبطين ببعض للأبد!
+              </p>
+            </div>
+
+            {/* Pairing Code Card */}
+            <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-850 border border-white/10 space-y-2.5">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5">
+                <div>
+                  <span className="text-[11px] text-slate-400 block">كود الأمان والربط الدائم:</span>
+                  <span className="text-xl sm:text-2xl font-black text-rose-400 tracking-wider font-mono">
+                    {pairing.pairCode}
+                  </span>
+                </div>
+
+                <button
+                  onClick={handleCopyPairLink}
+                  className="w-full sm:w-auto px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 text-white font-bold text-xs transition shadow-lg flex items-center justify-center gap-1.5 active:scale-95"
+                >
+                  <Share2 className="w-3.5 h-3.5" />
+                  <span>{copiedLink ? 'تم نسخ الرابط لحبيبتك!' : 'نسخ رابط الربط المباشر لحبيبتك 🔗'}</span>
+                </button>
+              </div>
+              <p className="text-[11px] text-slate-300 leading-relaxed">
+                ابعت الرابط ده لـ {partnerUser.name} على الواتس.. أول ما تفتحه هيفتح التطبيق فوراً متصل بيكي وبحسابك ومش هيتشال نهائياً!
+              </p>
+            </div>
+
+            {/* How to install on Mobile Homescreen */}
+            <div className="space-y-2.5">
+              <h4 className="font-bold text-white text-xs sm:text-sm flex items-center gap-1.5">
+                <Download className="w-3.5 h-3.5 text-emerald-400" />
+                طريقة تثبيت التطبيق على الموبايل ليبقى شغال دايماً:
+              </h4>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {/* iPhone Safari */}
+                <div className="p-3 rounded-xl bg-slate-850/80 border border-white/5 space-y-1.5">
+                  <h5 className="font-bold text-white text-xs flex items-center gap-1.5">
+                    <Smartphone className="w-3.5 h-3.5 text-sky-400" />
+                    على الآيفون (iPhone / Safari):
+                  </h5>
+                  <ol className="text-[11px] text-slate-300 space-y-1 list-decimal list-inside leading-relaxed">
+                    <li>افتح الرابط في متصفح Safari.</li>
+                    <li>اضغط على زر المشاركة (المربع بسهم ⬆️ بالأسفل).</li>
+                    <li>اختر <strong>"إضافة إلى الصفحة الرئيسية"</strong>.</li>
+                    <li>هيظهر التطبيق باسم "الامان" ويفضل شغال دايماً!</li>
+                  </ol>
+                </div>
+
+                {/* Android Chrome */}
+                <div className="p-3 rounded-xl bg-slate-850/80 border border-white/5 space-y-1.5">
+                  <h5 className="font-bold text-white text-xs flex items-center gap-1.5">
+                    <Smartphone className="w-3.5 h-3.5 text-emerald-400" />
+                    على الأندرويد (Android / Chrome):
+                  </h5>
+                  <ol className="text-[11px] text-slate-300 space-y-1 list-decimal list-inside leading-relaxed">
+                    <li>افتح الرابط في متصفح Chrome.</li>
+                    <li>اضغط على الثلاث نقاط بالأعلى (⋮).</li>
+                    <li>اختر <strong>"تثبيت التطبيق"</strong> أو "إضافة إلى الشاشة الرئيسية".</li>
+                    <li>سيتم تثبيته كتطبيق حقيقي على الموبايل ويفضل شغال دايماً!</li>
+                  </ol>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Quick Links to Other Features (Clean wrap on mobile) */}
+      <div className="rounded-2xl bg-slate-900/40 border border-white/5 p-3 flex flex-wrap items-center justify-between gap-2 text-xs">
+        <span className="text-slate-400 font-medium text-[11px]">تنقل سريع:</span>
+        <div className="flex flex-wrap items-center gap-1.5">
           <button
             onClick={() => onGoToTab('chat')}
-            className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 transition"
+            className="px-2.5 py-1 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs transition"
           >
-            💬 الشات والريكوردات
+            💬 الشات
           </button>
           <button
             onClick={() => onGoToTab('love')}
-            className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 transition"
+            className="px-2.5 py-1 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs transition"
           >
-            💖 مقياس الحب والصناديق الغرامية
+            💖 مقياس الحب
           </button>
           <button
             onClick={() => onGoToTab('questions')}
-            className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 transition"
+            className="px-2.5 py-1 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs transition"
           >
             ❓ أسئلة مفاجئة
           </button>
           <button
             onClick={() => onGoToTab('milestones')}
-            className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 transition"
+            className="px-2.5 py-1 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs transition"
           >
-            📅 المناسبات والذكريات
+            📅 المناسبات
           </button>
           <button
             onClick={() => onGoToTab('gps')}
-            className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 transition flex items-center gap-1"
+            className="px-2.5 py-1 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs transition flex items-center gap-1"
           >
             <MapPin className="w-3 h-3 text-rose-400" />
-            المشاوير وتتبع الـ GPS
+            الـ GPS
           </button>
         </div>
       </div>
