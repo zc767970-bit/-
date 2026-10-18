@@ -1,0 +1,1312 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>تطبيق الأمان 🤍 حمودي & سيمو</title>
+  
+  <!-- خط كايو الأنيق -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  
+  <!-- مكتبة الخرائط المباشرة Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- مؤثرات الاحتفال Confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <style>
+    :root {
+      --primary: #e11d48;
+      --primary-light: #ffe4e6;
+      --primary-dark: #9f1239;
+      --secondary: #8b5cf6;
+      --bg-dark: #0f172a;
+      --card-bg: rgba(255, 255, 255, 0.95);
+      --card-border: rgba(226, 232, 240, 0.8);
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+      --gold: #f59e0b;
+      --radius: 20px;
+      --shadow: 0 10px 25px -5px rgba(225, 29, 72, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Cairo', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background: linear-gradient(135deg, #fff1f2 0%, #f5f3ff 50%, #eff6ff 100%);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+      padding-bottom: 85px;
+    }
+
+    /* شريط الرأس المميز */
+    header {
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(12px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding: 12px 18px;
+      border-bottom: 1px solid rgba(244, 63, 94, 0.15);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+    }
+
+    .app-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .app-logo {
+      width: 42px;
+      height: 42px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      box-shadow: 0 4px 12px rgba(225, 29, 72, 0.3);
+    }
+
+    .app-title h1 {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--primary-dark);
+      line-height: 1.1;
+    }
+
+    .app-title p {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .user-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 30px;
+      background: #f1f5f9;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--text-main);
+      border: 1px solid #e2e8f0;
+      cursor: pointer;
+    }
+
+    .user-badge.hamoudi {
+      background: #e0f2fe;
+      color: #0369a1;
+      border-color: #bae6fd;
+    }
+
+    .user-badge.simo {
+      background: #fce7f3;
+      color: #be185d;
+      border-color: #fbcfe8;
+    }
+
+    /* الحاوية الأساسية */
+    main {
+      flex: 1;
+      max-width: 520px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    .tab-content {
+      display: none;
+      animation: fadeIn 0.25s ease-in-out;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* الكروت */
+    .card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      padding: 18px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--card-border);
+      position: relative;
+    }
+
+    .card-title {
+      font-size: 1.05rem;
+      font-weight: 800;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--primary-dark);
+    }
+
+    /* الأزرار السريعة بالأعلى */
+    .quick-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .action-btn {
+      padding: 14px 12px;
+      border-radius: 16px;
+      border: none;
+      font-weight: 700;
+      font-size: 0.92rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+    }
+
+    .action-btn:active {
+      transform: scale(0.97);
+    }
+
+    .btn-sos {
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+      color: white;
+      grid-column: span 1;
+    }
+
+    .btn-joy {
+      background: linear-gradient(135deg, #ec4899, #db2777);
+      color: white;
+      grid-column: span 1;
+    }
+
+    .btn-safe {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: white;
+      grid-column: span 2;
+      flex-direction: row;
+      justify-content: center;
+    }
+
+    /* أزرار نبضات الحب */
+    .pings-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .ping-btn {
+      background: #fff;
+      border: 1px solid #fecdd3;
+      padding: 10px;
+      border-radius: 14px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #9f1239;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: 0.2s;
+    }
+
+    .ping-btn:hover {
+      background: #ffe4e6;
+    }
+
+    /* إعدادات المنبه بالوقت المحدد */
+    .input-group {
+      margin-bottom: 12px;
+    }
+
+    .input-group label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .input-control {
+      width: 100%;
+      padding: 12px;
+      border-radius: 14px;
+      border: 1px solid #cbd5e1;
+      font-size: 0.95rem;
+      outline: none;
+      background: #f8fafc;
+    }
+
+    .input-control:focus {
+      border-color: var(--primary);
+      background: #fff;
+    }
+
+    .btn-primary {
+      width: 100%;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      border: none;
+      padding: 13px;
+      border-radius: 14px;
+      font-size: 0.95rem;
+      font-weight: 800;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    /* قائمة المنبهات المجدولة */
+    .alarms-list {
+      margin-top: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .alarm-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 14px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 14px;
+      font-size: 0.85rem;
+    }
+
+    /* الشات */
+    .chat-box {
+      height: 380px;
+      overflow-y: auto;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      background: #fdf2f8;
+      border-radius: 18px;
+      border: 1px solid #fbcfe8;
+      margin-bottom: 12px;
+    }
+
+    .msg-bubble {
+      max-width: 82%;
+      padding: 10px 14px;
+      border-radius: 16px;
+      font-size: 0.9rem;
+      line-height: 1.4;
+      position: relative;
+    }
+
+    .msg-mine {
+      align-self: flex-start;
+      background: linear-gradient(135deg, var(--primary), #f43f5e);
+      color: white;
+      border-bottom-right-radius: 4px;
+    }
+
+    .msg-partner {
+      align-self: flex-end;
+      background: white;
+      color: var(--text-main);
+      border: 1px solid #e2e8f0;
+      border-bottom-left-radius: 4px;
+    }
+
+    .msg-time {
+      font-size: 0.65rem;
+      opacity: 0.75;
+      margin-top: 4px;
+      display: block;
+      text-align: left;
+    }
+
+    .chat-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .record-btn {
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      background: #ef4444;
+      color: white;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .record-btn.recording {
+      animation: pulse 1s infinite;
+      background: #b91c1c;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+      70% { transform: scale(1.1); box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+      100% { transform: scale(1); }
+    }
+
+    /* مقياس الحب والصناديق الأربعة */
+    .love-meter-container {
+      text-align: center;
+      padding: 15px 0;
+    }
+
+    .meter-circle {
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      background: conic-gradient(var(--primary) calc(var(--percent) * 1%), #fee2e2 0);
+      margin: 0 auto 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 20px rgba(225, 29, 72, 0.2);
+      transition: all 0.5s ease;
+    }
+
+    .meter-inner {
+      width: 112px;
+      height: 112px;
+      border-radius: 50%;
+      background: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 1.5rem;
+      color: var(--primary);
+    }
+
+    .boxes-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-top: 15px;
+    }
+
+    .surprise-box {
+      background: linear-gradient(135deg, #fff, #fff1f2);
+      border: 2px dashed #fda4af;
+      border-radius: 16px;
+      padding: 18px 10px;
+      text-align: center;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .surprise-box.disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      border-color: #cbd5e1;
+    }
+
+    .surprise-box .box-icon {
+      font-size: 2.2rem;
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    /* المودال لقراءة الرسالة */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(5px);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-card {
+      background: white;
+      border-radius: 24px;
+      width: 100%;
+      max-width: 440px;
+      padding: 24px;
+      text-align: center;
+      position: relative;
+      animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    @keyframes popIn {
+      from { transform: scale(0.85); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .letter-content {
+      font-size: 1.05rem;
+      line-height: 1.7;
+      color: #334155;
+      background: #fff7ed;
+      padding: 16px;
+      border-radius: 16px;
+      border: 1px solid #fed7aa;
+      margin: 15px 0;
+      text-align: right;
+    }
+
+    /* شريط التنقل السفلي في الموبايل */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(12px);
+      border-top: 1px solid rgba(226, 232, 240, 0.8);
+      display: flex;
+      justify-content: space-around;
+      padding: 8px 6px;
+      z-index: 100;
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      border: none;
+      background: none;
+      cursor: pointer;
+      width: 16%;
+    }
+
+    .nav-item.active {
+      color: var(--primary);
+    }
+
+    .nav-item span.icon {
+      font-size: 1.3rem;
+    }
+
+    /* الخريطة */
+    #map {
+      height: 280px;
+      border-radius: 18px;
+      border: 1px solid #cbd5e1;
+      margin-bottom: 12px;
+      z-index: 1;
+    }
+
+    /* مفتاح قفل الهوية في البداية */
+    .role-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.85);
+      z-index: 2000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .role-card {
+      background: white;
+      border-radius: 28px;
+      padding: 28px 20px;
+      max-width: 380px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .role-btn {
+      width: 100%;
+      padding: 16px;
+      margin-top: 12px;
+      border-radius: 18px;
+      border: 2px solid transparent;
+      font-size: 1.05rem;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: 0.2s;
+    }
+
+    .role-btn-hamoudi {
+      background: #e0f2fe;
+      color: #0369a1;
+      border-color: #7dd3fc;
+    }
+
+    .role-btn-simo {
+      background: #fce7f3;
+      color: #be185d;
+      border-color: #f472b6;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- شاشة تحديد الهوية المرة الأولى -->
+  <div id="roleModal" class="role-modal" style="display: none;">
+    <div class="role-card">
+      <div style="font-size: 3rem; margin-bottom: 10px;">🤍🔐</div>
+      <h2 style="color: var(--primary-dark); font-weight: 900; margin-bottom: 6px;">مرحباً بك في الأمان</h2>
+      <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 18px;">
+        من فضلك اختر هويتك الشخصية. سيتم قفل الهاتف على هذا الحساب لضمان خصوصية وربط التطبيق بينكما.
+      </p>
+      
+      <button class="role-btn role-btn-hamoudi" onclick="setAppRole('hamoudi')">
+        <span>👑</span> أنا حمودي
+      </button>
+
+      <button class="role-btn role-btn-simo" onclick="setAppRole('simo')">
+        <span>🌸</span> أنا سيمو
+      </button>
+    </div>
+  </div>
+
+  <!-- الشريط العلوي -->
+  <header>
+    <div class="app-brand">
+      <div class="app-logo">🛡️</div>
+      <div class="app-title">
+        <h1>الأمـــان</h1>
+        <p>حمودي & سيمو للأبد 🤍</p>
+      </div>
+    </div>
+    <div id="currentUserBadge" class="user-badge" onclick="alertRoleLock()">
+      <span>👤</span> <span id="badgeName">جاري التحميل...</span>
+    </div>
+  </header>
+
+  <!-- المحتوى الرئيسي -->
+  <main>
+
+    <!-- 1. تبويب الإشعارات والمنبه (الافتتاحي والرئيسي) -->
+    <div id="tab-alerts" class="tab-content active">
+      <!-- أزرار الطوارئ والبشرى -->
+      <div class="quick-actions">
+        <button class="action-btn btn-sos" onclick="triggerSOS()">
+          <span style="font-size: 1.5rem;">🚨</span>
+          <span>طوارئ SOS فورية</span>
+        </button>
+
+        <button class="action-btn btn-joy" onclick="triggerJoy()">
+          <span style="font-size: 1.5rem;">🎉</span>
+          <span>حاجة حلوة حصلت!</span>
+        </button>
+
+        <button class="action-btn btn-safe" onclick="sendQuickPing('🚗 أنا وصلت بالسلامة وطمنتك عليا 🤍')">
+          <span>🚗 وصلت بالسلامة والحمد لله</span>
+        </button>
+      </div>
+
+      <!-- نبضات الحب اللحظية -->
+      <div class="card">
+        <div class="card-title"><span>💌</span> إرسال نبضة حب فورية:</div>
+        <div class="pings-grid">
+          <button class="ping-btn" onclick="sendQuickPing('دعيتلك فجأة ربنا يحفظك ليا 🤍')">🤍 دعيتلك فجأة</button>
+          <button class="ping-btn" onclick="sendQuickPing('اشرب مياه يا قلبي ومتنساش نفسك 🥤')">🥤 اشرب مياه</button>
+          <button class="ping-btn" onclick="sendQuickPing('ابتسم عشان ضحكتك بتنور دنيتي 🌸')">🌸 ابتسم يا روحي</button>
+          <button class="ping-btn" onclick="sendQuickPing('وحشتني أوي في نص اليوم 🥺')">🥺 وحشتني أوي</button>
+        </div>
+      </div>
+
+      <!-- جدولة المنبه المحدد بالساعة والدقيقة -->
+      <div class="card">
+        <div class="card-title"><span>⏰</span> ضبط منبه بالوقت المحدد بدقة:</div>
+        
+        <div class="input-group">
+          <label>اختر وقت الرنين الدقيق:</label>
+          <input type="time" id="alarmTimeInput" class="input-control">
+        </div>
+
+        <div class="input-group">
+          <label>رسالة المنبه لشريكك:</label>
+          <input type="text" id="alarmNoteInput" class="input-control" placeholder="مثال: جه وقت دوانا / وقت كلمتنا الخاصة 🤍">
+        </div>
+
+        <button class="btn-primary" onclick="scheduleExactAlarm()">🔔 تفعيل المنبه الآن</button>
+
+        <div class="alarms-list" id="activeAlarmsList">
+          <!-- المنبهات المجدولة تظهر هنا -->
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. تبويب الشات والصوت والصور -->
+    <div id="tab-chat" class="tab-content">
+      <div class="card">
+        <div class="card-title"><span>💬</span> محادثتنا الخاصة والآمنة</div>
+        <div class="chat-box" id="chatBox">
+          <!-- الرسائل المتبادلة -->
+        </div>
+
+        <div class="chat-controls">
+          <input type="file" id="photoUpload" accept="image/*" style="display: none;" onchange="handleImageSend(this)">
+          <button class="ping-btn" style="padding: 10px;" onclick="document.getElementById('photoUpload').click()">📷</button>
+          
+          <input type="text" id="chatInput" class="input-control" placeholder="اكتب لحبيبك هنا..." onkeypress="if(event.key==='Enter') sendChatMessage()">
+          
+          <button class="record-btn" id="voiceRecordBtn" onclick="toggleVoiceRecord()">🎙️</button>
+          <button class="ping-btn" style="background: var(--primary); color: white;" onclick="sendChatMessage()">إرسال</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. مقياس الحب والصناديق الأربعة -->
+    <div id="tab-love" class="tab-content">
+      <div class="card">
+        <div class="card-title"><span>💖</span> مقياس مدى الحب بيننا</div>
+        <div class="love-meter-container">
+          <div class="meter-circle" id="meterCircle" style="--percent: 30;">
+            <div class="meter-inner">
+              <span id="meterText">30%</span>
+            </div>
+          </div>
+          <p style="font-size: 0.85rem; color: var(--text-muted); font-weight: 700;">
+            يزداد المقياس تلقائياً مع تفاعلكما ورسائلكم وحل الأسئلة! عند 100% تفتح الصناديق.
+          </p>
+        </div>
+
+        <div class="card-title" style="margin-top: 15px;"><span>🎁</span> الصناديق الأربعة للرسائل السرية:</div>
+        <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 8px;">
+          كل صندوق يحتوي على رسالة عهد وغرام خاصة، وتتغير الرسائل تلقائياً في كل دورة!
+        </p>
+
+        <div class="boxes-grid">
+          <div class="surprise-box disabled" id="box-1" onclick="openLoveBox(1)">
+            <span class="box-icon">📦</span>
+            <div style="font-weight: 800; font-size: 0.85rem;">صندوق الوفاء</div>
+          </div>
+
+          <div class="surprise-box disabled" id="box-2" onclick="openLoveBox(2)">
+            <span class="box-icon">🎀</span>
+            <div style="font-weight: 800; font-size: 0.85rem;">صندوق العهد</div>
+          </div>
+
+          <div class="surprise-box disabled" id="box-3" onclick="openLoveBox(3)">
+            <span class="box-icon">💌</span>
+            <div style="font-weight: 800; font-size: 0.85rem;">صندوق السكينة</div>
+          </div>
+
+          <div class="surprise-box disabled" id="box-4" onclick="openLoveBox(4)">
+            <span class="box-icon">👑</span>
+            <div style="font-weight: 800; font-size: 0.85rem;">صندوق المستقبل</div>
+          </div>
+        </div>
+
+        <button class="ping-btn" style="width: 100%; margin-top: 14px; justify-content: center;" onclick="boostLoveMeter(15)">
+          ✨ زيادة مقياس الحب الآن للتجربة
+        </button>
+      </div>
+    </div>
+
+    <!-- 4. تبويب المناسبات وتواريخ الذكريات (مع التعديل الحر) -->
+    <div id="tab-events" class="tab-content">
+      <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <div class="card-title" style="margin: 0;"><span>📅</span> مناسباتنا وذكرياتنا الجميلة</div>
+          <button class="ping-btn" style="padding: 5px 10px;" onclick="toggleEventEdit()">✏️ تعديل المناسبات</button>
+        </div>
+
+        <div id="eventsListDisplay">
+          <!-- كروت المناسبات -->
+        </div>
+
+        <!-- خانة إضافة وتعديل المناسبات -->
+        <div id="eventEditSection" style="display: none; border-top: 1px solid #e2e8f0; padding-top: 12px; margin-top: 12px;">
+          <div class="input-group">
+            <label>اسم المناسبة:</label>
+            <input type="text" id="newEventName" class="input-control" placeholder="مثال: ذكرى أول لقاء">
+          </div>
+          <div class="input-group">
+            <label>التاريخ:</label>
+            <input type="date" id="newEventDate" class="input-control">
+          </div>
+          <button class="btn-primary" onclick="addNewCustomEvent()">حفظ المناسبة</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. تبويب الأسئلة المفاجئة اليومية -->
+    <div id="tab-questions" class="tab-content">
+      <div class="card">
+        <div class="card-title"><span>❓</span> سؤال اليوم الخاص بحمودي وسيمو</div>
+        <div style="background: #fdf4ff; border: 1px solid #f0abfc; padding: 14px; border-radius: 14px; margin-bottom: 12px;">
+          <h4 id="todayQuestionText" style="color: #86198f; font-size: 0.95rem;">جاري تحميل السؤال اليومي...</h4>
+        </div>
+
+        <div class="input-group">
+          <label>إجابتك الصادقة من قلبك:</label>
+          <textarea id="questionAnswerInput" class="input-control" rows="3" placeholder="اكتب إجابتك هنا ليراها شريكك فوراً..."></textarea>
+        </div>
+
+        <button class="btn-primary" onclick="submitDailyAnswer()">إرسال الإجابة لشريكي 🤍</button>
+
+        <div id="partnerAnswerBox" style="margin-top: 15px; display: none; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 12px; border-radius: 14px;">
+          <span style="font-weight: 800; color: #065f46; font-size: 0.85rem;">إجابة شريكك:</span>
+          <p id="partnerAnswerText" style="font-size: 0.9rem; color: #1e293b; margin-top: 4px;"></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. تبويب المشاوير والـ GPS المباشر -->
+    <div id="tab-gps" class="tab-content">
+      <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <div class="card-title" style="margin: 0;"><span>📍</span> خريطة التتبع المباشر</div>
+          <button class="ping-btn" id="gpsToggleBtn" onclick="toggleGpsTracking()">🟢 تتبع حركتنا: نشط</button>
+        </div>
+
+        <div id="map"></div>
+
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; font-size: 0.82rem;">
+          <div style="background: #f8fafc; padding: 10px; border-radius: 12px; border: 1px solid #e2e8f0;">
+            <div style="font-weight: 700; color: var(--text-muted);">حالة بطارية شريكك:</div>
+            <div id="partnerBatteryText" style="font-weight: 800; color: #10b981; margin-top: 2px;">🔋 88% (متصل بالشاحن)</div>
+          </div>
+          <div style="background: #f8fafc; padding: 10px; border-radius: 12px; border: 1px solid #e2e8f0;">
+            <div style="font-weight: 700; color: var(--text-muted);">المسافة التقديرية بيننا:</div>
+            <div id="distanceText" style="font-weight: 800; color: var(--primary); margin-top: 2px;">🚗 4.2 كم (12 دقيقة)</div>
+          </div>
+        </div>
+
+        <div style="margin-top: 10px; font-size: 0.78rem; color: var(--text-muted); text-align: center;">
+          يتم التحديث تلقائياً دون الحاجة لإرسال لوكيشن بالواتساب مطلقاً.
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- شريط التنقل السفلي الثابت -->
+  <nav class="bottom-nav">
+    <button class="nav-item active" onclick="switchTab('alerts')">
+      <span class="icon">🔔</span>
+      <span>الرئيسية</span>
+    </button>
+    <button class="nav-item" onclick="switchTab('chat')">
+      <span class="icon">💬</span>
+      <span>المحادثة</span>
+    </button>
+    <button class="nav-item" onclick="switchTab('love')">
+      <span class="icon">💖</span>
+      <span>الصناديق</span>
+    </button>
+    <button class="nav-item" onclick="switchTab('events')">
+      <span class="icon">📅</span>
+      <span>المناسبات</span>
+    </button>
+    <button class="nav-item" onclick="switchTab('questions')">
+      <span class="icon">❓</span>
+      <span>السؤال</span>
+    </button>
+    <button class="nav-item" onclick="switchTab('gps')">
+      <span class="icon">📍</span>
+      <span>الـ GPS</span>
+    </button>
+  </nav>
+
+  <!-- نافذة قراءة رسائل الصناديق -->
+  <div id="letterModal" class="modal-overlay">
+    <div class="modal-card">
+      <div style="font-size: 2.8rem; margin-bottom: 6px;">💌</div>
+      <h3 id="letterTitle" style="color: var(--primary-dark); font-weight: 800;">رسالة حب من القلب</h3>
+      <div id="letterBody" class="letter-content"></div>
+      <button class="btn-primary" onclick="closeLetterModal()">إغلاق وحفظ في الذاكرة 🤍</button>
+    </div>
+  </div>
+
+  <script>
+    /* ==============================================================
+       1. إدارة الهوية وقفل الحساب (حمودي / سيمو)
+    ============================================================== */
+    let myRole = localStorage.getItem('alAman_myRole');
+    let partnerRole = myRole === 'hamoudi' ? 'simo' : 'hamoudi';
+
+    function initUserRole() {
+      if (!myRole) {
+        document.getElementById('roleModal').style.display = 'flex';
+      } else {
+        updateRoleBadge();
+      }
+    }
+
+    function setAppRole(role) {
+      localStorage.setItem('alAman_myRole', role);
+      myRole = role;
+      partnerRole = myRole === 'hamoudi' ? 'simo' : 'hamoudi';
+      document.getElementById('roleModal').style.display = 'none';
+      updateRoleBadge();
+      loadDailyQuestion();
+    }
+
+    function updateRoleBadge() {
+      const badge = document.getElementById('currentUserBadge');
+      const badgeName = document.getElementById('badgeName');
+      if (myRole === 'hamoudi') {
+        badge.className = 'user-badge hamoudi';
+        badgeName.innerText = 'أنا حمودي 👑 (شريكي: سيمو 🌸)';
+      } else {
+        badge.className = 'user-badge simo';
+        badgeName.innerText = 'أنا سيمو 🌸 (شريكي: حمودي 👑)';
+      }
+    }
+
+    function alertRoleLock() {
+      alert(`حسابك مقفول ومربوط باسم: ${myRole === 'hamoudi' ? 'حمودي 👑' : 'سيمو 🌸'}.\nهذا لضمان خصوصيتك وعدم تداخل الإشعارات بينكما.`);
+    }
+
+    /* ==============================================================
+       2. نظام الصوتيات والمؤثرات (Web Audio API)
+    ============================================================== */
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function playSirenSound() {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.type = 'sawtooth';
+      
+      let freq = 700;
+      let rising = true;
+      const interval = setInterval(() => {
+        if (rising) {
+          freq += 60;
+          if (freq >= 1200) rising = false;
+        } else {
+          freq -= 60;
+          if (freq <= 700) rising = true;
+        }
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      }, 50);
+
+      osc.start();
+      setTimeout(() => {
+        clearInterval(interval);
+        osc.stop();
+      }, 3500);
+    }
+
+    function playJoySound() {
+      const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+      notes.forEach((freq, idx) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime + idx * 0.15);
+        gain.gain.setValueAtTime(0.3, audioCtx.currentTime + idx * 0.15);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + idx * 0.15 + 0.6);
+        osc.start(audioCtx.currentTime + idx * 0.15);
+        osc.stop(audioCtx.currentTime + idx * 0.15 + 0.6);
+      });
+    }
+
+    /* ==============================================================
+       3. الإشعارات والمنبه المباشر بالوقت
+    ============================================================== */
+    if ("Notification" in window && Notification.permission !== "granted") {
+      Notification.requestPermission();
+    }
+
+    function showPhoneNotification(title, body) {
+      if ("Notification" in window && Notification.permission === "granted") {
+        new Notification(title, { body: body, icon: "🛡️" });
+      }
+    }
+
+    function triggerSOS() {
+      playSirenSound();
+      showPhoneNotification("🚨 طوارئ SOS عاجلة!", `شريكك ${myRole === 'hamoudi' ? 'حمودي' : 'سيمو'} بحاجة ماسة إليك الآن!`);
+      alert("🚨 تم إطلاق إنذار الطوارئ ومشاركة موقعك الدقيق فوراً والاتصال الهاتفي بشريكك!");
+    }
+
+    function triggerJoy() {
+      playJoySound();
+      confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
+      showPhoneNotification("🎉 بشرى خير وفرحة!", `حاجة حلوة حصلت مع ${myRole === 'hamoudi' ? 'حمودي' : 'سيمو'}! رن عليه حالاً وافرح معاه!`);
+    }
+
+    function sendQuickPing(msg) {
+      playJoySound();
+      alert(`تم إرسال التنبيه فوراً: "${msg}"`);
+      boostLoveMeter(3);
+    }
+
+    let activeAlarms = JSON.parse(localStorage.getItem('alAman_alarms') || '[]');
+
+    function scheduleExactAlarm() {
+      const timeVal = document.getElementById('alarmTimeInput').value;
+      const noteVal = document.getElementById('alarmNoteInput').value || 'تنبيه حب ورعاية خاص 🤍';
+      
+      if (!timeVal) {
+        alert("يرجى اختيار الوقت بالساعة والدقيقة أولاً!");
+        return;
+      }
+
+      activeAlarms.push({ time: timeVal, note: noteVal, active: true });
+      localStorage.setItem('alAman_alarms', JSON.stringify(activeAlarms));
+      renderAlarms();
+      alert(`تم ضبط المنبه بنجاح في تمام الساعة: ${timeVal}`);
+    }
+
+    function renderAlarms() {
+      const container = document.getElementById('activeAlarmsList');
+      container.innerHTML = '';
+      activeAlarms.forEach((alm, idx) => {
+        container.innerHTML += `
+          <div class="alarm-item">
+            <div>
+              <strong>⏰ ${alm.time}</strong> - <span>${alm.note}</span>
+            </div>
+            <button class="ping-btn" style="color: red; border-color: red;" onclick="deleteAlarm(${idx})">حذف</button>
+          </div>
+        `;
+      });
+    }
+
+    function deleteAlarm(idx) {
+      activeAlarms.splice(idx, 1);
+      localStorage.setItem('alAman_alarms', JSON.stringify(activeAlarms));
+      renderAlarms();
+    }
+
+    // فحص المنبه كل ثانية بالوقت الحقيقي
+    setInterval(() => {
+      const now = new Date();
+      const currentHours = String(now.getHours()).padStart(2, '0');
+      const currentMinutes = String(now.getMinutes()).padStart(2, '0');
+      const timeString = `${currentHours}:${currentMinutes}`;
+      const currentSec = now.getSeconds();
+
+      if (currentSec === 0) {
+        activeAlarms.forEach(alm => {
+          if (alm.time === timeString && alm.active) {
+            playJoySound();
+            showPhoneNotification(`⏰ حان الموعد: ${alm.time}`, alm.note);
+          }
+        });
+      }
+    }, 1000);
+
+    /* ==============================================================
+       4. مقياس الحب والصناديق الأربعة (رسائل متغيرة مع كل دورة)
+    ============================================================== */
+    let loveMeter = parseInt(localStorage.getItem('alAman_loveMeter') || '35');
+    let messageCycle = parseInt(localStorage.getItem('alAman_msgCycle') || '0');
+
+    // مجموعات الرسائل المتجددة
+    const letterSets = [
+      // المجموعة 1
+      [
+        "حبيبتي وروحي سيمو.. تعرفي يعني إيه 'الأمان'؟ الأمان يعني لما كل الدنيا تضيق وتقفل في وشي، مجرد ما أسمع صوتك أو أشوف ضحكتك، روحي ترجعلي وتهدى من تاني.. إنتِ دعوة أمي الصادقة اللي ربنا استجابها ليا وحطها في طريقي. بوعدك هفضل في ضهرك وسندك وحصنك لأخر نبضة في قلبي.",
+        "إلى أميرتي وسيمو قلبي.. حنيتك بتمسح أي تعب في ثانية، ونظرة واحدة في عيونك بتديني طاقة أهد بيها جبال عشان أشوفك مبسوطة ومطمنة. ربنا يديمك نعمة في عمري وما يحرمني من وجودك.",
+        "مستني اليوم اللي يتقفل علينا فيه باب بيت واحد، نسهر سوا، ونصحى على وش بعض، وكل خطوة بنمشيها سوا بتقربنا لأجمل حلم. قلبي وعيني مش شايفين غيرك في كل الدنيا.",
+        "حمودي وسيمو.. لما بسمع أسامينا سوا، بحس بدفا وراحة ملهاش نهاية. إنتِ ملجأي وسري الصغير، وأنا واقع في غرامك كل يوم أكتر من اللي قبله."
+      ],
+      // المجموعة 2 (تتجدد تلقائياً عند 100%)
+      [
+        "سيمو الغالية.. في كل سجدة برفع إيدي للسما وأقول: يا رب احفظلي الهدية اللي نورت أيامي. إنتِ النور اللي بدد خوفي، والحضن اللي دايماً بتمنى أستخبى جواه من العالم كله.",
+        "حبيبتي.. مش بس بحبك، أنا ممتن لكل ثانية بتستحمليني فيها وبتحسي بيا من غير ما أتكلم. وجودك في عمري خلاني أعرف طعم الأمان الحقيقي.",
+        "وعد عهد رجولة وأمان.. مهما مرت السنين وكبرنا، هفضل أشوفك أجمل بنوتة في الكون وأحن قلب عليا، وعمري ما هسمح لدمعة تنزل من عينك إلا لو كانت دموع فرح.",
+        "قلب حمودي وروحه.. انتِ مش مجرد حبيبة، انتِ وطني الصغير اللي ماليش مكان ولا راحة براه. بحبك حب يفيض عن الكون كله."
+      ]
+    ];
+
+    function updateMeterUI() {
+      document.getElementById('meterCircle').style.setProperty('--percent', loveMeter);
+      document.getElementById('meterText').innerText = `${loveMeter}%`;
+
+      const boxes = document.querySelectorAll('.surprise-box');
+      if (loveMeter >= 100) {
+        boxes.forEach(b => b.classList.remove('disabled'));
+      } else {
+        boxes.forEach(b => b.classList.add('disabled'));
+      }
+    }
+
+    function boostLoveMeter(amount) {
+      loveMeter += amount;
+      if (loveMeter >= 100) {
+        loveMeter = 100;
+        confetti({ particleCount: 150 });
+      }
+      localStorage.setItem('alAman_loveMeter', loveMeter);
+      updateMeterUI();
+    }
+
+    function openLoveBox(boxNumber) {
+      if (loveMeter < 100) {
+        alert("🔒 الصناديق تفتح فقط عند وصول مقياس الحب إلى 100%!");
+        return;
+      }
+
+      const activeSet = letterSets[messageCycle % letterSets.length];
+      const letter = activeSet[boxNumber - 1];
+
+      document.getElementById('letterTitle').innerText = `💌 رسالة الصندوق رقم (${boxNumber})`;
+      document.getElementById('letterBody').innerText = letter;
+      document.getElementById('letterModal').classList.add('active');
+
+      // عند فتح الصندوق الرابع تجدد الرسائل للدورة التالية وتصفير المقياس لبدء مغامرة جديدة
+      if (boxNumber === 4) {
+        messageCycle++;
+        loveMeter = 20; // إعادة البدء
+        localStorage.setItem('alAman_msgCycle', messageCycle);
+        localStorage.setItem('alAman_loveMeter', loveMeter);
+        setTimeout(updateMeterUI, 1000);
+      }
+    }
+
+    function closeLetterModal() {
+      document.getElementById('letterModal').classList.remove('active');
+    }
+
+    /* ==============================================================
+       5. الشات والريكورد الصوتي الحقيقي
+    ============================================================== */
+    let mediaRecorder;
+    let audioChunks = [];
+    let isRecording = false;
+
+    async function toggleVoiceRecord() {
+      const recordBtn = document.getElementById('voiceRecordBtn');
+      if (!isRecording) {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          mediaRecorder = new MediaRecorder(stream);
+          audioChunks = [];
+          mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+          mediaRecorder.onstop = () => {
+            const audioBlob = new Blob(audioChunks, { type: 'audio/mp3' });
+            const audioUrl = URL.createObjectURL(audioBlob);
+            appendChatMessage(`🎤 تسجيل صوتي (${new Date().toLocaleTimeString('ar-EG', {hour:'2-digit', minute:'2-digit'})})`, true, audioUrl);
+          };
+          mediaRecorder.start();
+          isRecording = true;
+          recordBtn.classList.add('recording');
+        } catch (err) {
+          alert("يرجى إعطاء إذن المايكروفون لتسجيل الريكورد!");
+        }
+      } else {
+        mediaRecorder.stop();
+        isRecording = false;
+        recordBtn.classList.remove('recording');
+      }
+    }
+
+    function sendChatMessage() {
+      const input = document.getElementById('chatInput');
+      const text = input.value.trim();
+      if (!text) return;
+      appendChatMessage(text, false);
+      input.value = '';
+      boostLoveMeter(2);
+    }
+
+    function appendChatMessage(content, isAudio = false, audioSrc = null) {
+      const box = document.getElementById('chatBox');
+      const time = new Date().toLocaleTimeString('ar-EG', {hour: '2-digit', minute:'2-digit'});
+      const msg = document.createElement('div');
+      msg.className = 'msg-bubble msg-mine';
+      
+      if (isAudio) {
+        msg.innerHTML = `<div>${content}</div><audio controls src="${audioSrc}" style="width: 100%; margin-top: 5px; height: 35px;"></audio><span class="msg-time">${time}</span>`;
+      } else {
+        msg.innerHTML = `<div>${content}</div><span class="msg-time">${time}</span>`;
+      }
+
+      box.appendChild(msg);
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function handleImageSend(input) {
+      if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = e => {
+          const box = document.getElementById('chatBox');
+          const time = new Date().toLocaleTimeString('ar-EG', {hour: '2-digit', minute:'2-digit'});
+          const msg = document.createElement('div');
+          msg.className = 'msg-bubble msg-mine';
+          msg.innerHTML = `<img src="${e.target.result}" style="max-width: 100%; border-radius: 12px; margin-bottom: 4px;"><span class="msg-time">${time}</span>`;
+          box.appendChild(msg);
+          box.scrollTop = box.scrollHeight;
+          boostLoveMeter(5);
+        };
+        reader.readAsDataURL(input.files[0]);
+      }
+    }
+
+    /* ==============================================================
+       6. المناسبات وتواريخ الذكريات مع التعديل
+    ============================================================== */
+    let eventsList = JSON.parse(localStorage.getItem('alAman_events') || JSON.stringify([
+      { name: "عيد ميلاد سيمو 🌸", date: "2026-11-20" },
+      { name: "عيد ميلاد حمودي 👑", date: "2026-08-15" },
+      { name: "يوم حبنا الأبدي 💍", date: "2024-05-10" }
+    ]));
+
+    function renderEvents() {
+      const display = document.getElementById('eventsListDisplay');
+      display.innerHTML = '';
+      eventsList.forEach(ev => {
+        const diffDays = Math.ceil((new Date(ev.date) - new Date()) / (1000 * 60 * 60 * 24));
+        display.innerHTML += `
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <div style="font-weight: 800; color: var(--primary-dark);">${ev.name}</div>
+              <div style="font-size: 0.78rem; color: var(--text-muted);">${ev.date}</div>
+            </div>
+            <div style="font-weight: 800; font-size: 0.82rem; color: ${diffDays >= 0 ? '#059669' : '#dc2626'};">
+              ${diffDays >= 0 ? `باقي ${diffDays} يوم` : 'ذكرى غالية مرّت 🤍'}
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    function toggleEventEdit() {
+      const sec = document.getElementById('eventEditSection');
+      sec.style.display = sec.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function addNewCustomEvent() {
+      const name = document.getElementById('newEventName').value;
+      const date = document.getElementById('newEventDate').value;
+      if (!name || !date) return alert("يرجى ملء الاسم والتاريخ!");
+      eventsList.push({ name, date });
+      localStorage.setItem('alAman_events', JSON.stringify(eventsList));
+      renderEvents();
+      toggleEventEdit();
+    }
+
+    /* ==============================================================
+       7. الأسئلة المفاجئة اليومية
+    ============================================================== */
+    const dailyQuestions = [
+      "إيه أكتر حاجة بتطمنك ومبتلاقيش زيها إلا في حضن وعين حبيبك؟",
+      "لو هتوصف أماننا بكلمة واحدة بس من أول ما عرفنا بعض، هتكون إيه؟",
+      "إيه أكتر ذكرى صغيرة حصلت بينا مستحيل تتمسح من بالك مهما عشنا؟"
+    ];
+
+    function loadDailyQuestion() {
+      const qIndex = new Date().getDate() % dailyQuestions.length;
+      document.getElementById('todayQuestionText').innerText = dailyQuestions[qIndex];
+    }
+
+    function submitDailyAnswer() {
+      const ans = document.getElementById('questionAnswerInput').value;
+      if (!ans) return alert("اكتب إجابتك أولاً!");
+      document.getElementById('partnerAnswerBox').style.display = 'block';
+      document.getElementById('partnerAnswerText').innerText = ans;
+      alert("تم إرسال إجابتك لشريكك ووصله إشعار فوري بها 🤍!");
+      boostLoveMeter(10);
+    }
+
+    /* ==============================================================
+       8. تتبع الـ GPS المباشر
+    ============================================================== */
+    let map, userMarker, partnerMarker;
+    let gpsActive = true;
+
+    function initMap() {
+      map = L.map('map').setView([30.0444, 31.2357], 13);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap'
+      }).addTo(map);
+
+      userMarker = L.marker([30.0444, 31.2357]).addTo(map).bindPopup("موقعي الحالي").openPopup();
+      partnerMarker = L.marker([30.0500, 31.2400]).addTo(map).bindPopup("مكان شريكي الآن 🤍");
+
+      if (navigator.geolocation) {
+        navigator.geolocation.watchPosition(pos => {
+          if (!gpsActive) return;
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+          userMarker.setLatLng([lat, lng]);
+          map.setView([lat, lng], 14);
+        });
+      }
+    }
+
+    function toggleGpsTracking() {
+      gpsActive = !gpsActive;
+      const btn = document.getElementById('gpsToggleBtn');
+      if (gpsActive) {
+        btn.innerText = "🟢 تتبع حركتنا: نشط";
+        btn.style.color = "#059669";
+      } else {
+        btn.innerText = "🔴 تتبع حركتنا: متوقف";
+        btn.style.color = "#dc2626";
+      }
+    }
+
+    /* ==============================================================
+       9. تبديل الشاشات
+    ============================================================== */
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+
+      document.getElementById(`tab-${tabId}`).classList.add('active');
+      event.currentTarget.classList.add('active');
+
+      if (tabId === 'gps') {
+        setTimeout(() => map.invalidateSize(), 200);
+      }
+    }
+
+    // التهيئة الشاملة عند التشغيل
+    window.addEventListener('load', () => {
+      initUserRole();
+      updateMeterUI();
+      renderAlarms();
+      renderEvents();
+      loadDailyQuestion();
+      initMap();
+    });
+  </script>
+</body>
+</html>
