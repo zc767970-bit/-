@@ -10,10 +10,12 @@ import {
   Calendar,
   HelpCircle,
   Gift,
+  Settings,
+  Lock,
 } from 'lucide-react';
 import { UserId, UserProfile } from '../types';
 
-export type AppTabType = 'notifications' | 'chat' | 'love' | 'milestones' | 'questions' | 'gps';
+export type AppTabType = 'notifications' | 'chat' | 'love' | 'milestones' | 'questions' | 'gps' | 'settings';
 
 interface NavbarProps {
   currentUserId: UserId;
@@ -23,6 +25,8 @@ interface NavbarProps {
   onTabChange: (tab: AppTabType) => void;
   onSwitchUser: (id: UserId) => void;
   loveMeter: number;
+  lockDeviceRole: boolean;
+  isPartnerOnline: boolean;
   onTriggerEmergency: () => void;
   onTriggerGoodNews: () => void;
   onOpenSpontaneousPings: () => void;
@@ -36,6 +40,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   onTabChange,
   onSwitchUser,
   loveMeter,
+  lockDeviceRole,
+  isPartnerOnline,
   onTriggerEmergency,
   onTriggerGoodNews,
   onOpenSpontaneousPings,
@@ -59,48 +65,68 @@ export const Navbar: React.FC<NavbarProps> = ({
                   حمودي & سيمو
                 </span>
               </div>
-              <p className="text-[10px] text-slate-400 hidden lg:block">
-                مساحتنا الخاصة للإشعارات، الشات، ورعاية بعض 🤍
-              </p>
+              {/* Partner live presence indicator */}
+              <div className="flex items-center gap-1 text-[10px] text-slate-400">
+                <span
+                  className={`w-1.5 h-1.5 rounded-full ${
+                    isPartnerOnline ? 'bg-emerald-400 animate-ping' : 'bg-slate-500'
+                  }`}
+                />
+                <span className={isPartnerOnline ? 'text-emerald-300 font-semibold' : ''}>
+                  {partnerUser.name}: {isPartnerOnline ? 'متصلة الآن 🟢' : 'نشطة مؤخراً'}
+                </span>
+              </div>
             </div>
           </div>
 
-          {/* Profile Switcher (Compact & Clean on Mobile) */}
+          {/* Profile Switcher / Device Owner badge */}
           <div className="flex items-center bg-slate-900/90 border border-white/10 rounded-xl sm:rounded-2xl p-0.5 shadow-inner shrink-0">
             <button
               onClick={() => onSwitchUser('hamoudi')}
-              className={`flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold transition-all ${
+              className={`flex items-center gap-1 px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold transition-all ${
                 currentUserId === 'hamoudi'
                   ? 'bg-gradient-to-r from-sky-600 to-indigo-600 text-white shadow-sm'
                   : 'text-slate-400 hover:text-white'
               }`}
+              title="هاتف حمودي"
             >
               <span className="w-1.5 h-1.5 rounded-full bg-sky-300" />
-              حمودي
+              <span>حمودي</span>
+              {lockDeviceRole && currentUserId === 'hamoudi' && (
+                <Lock className="w-2.5 h-2.5 text-sky-200 hidden xs:inline" />
+              )}
             </button>
             <button
               onClick={() => onSwitchUser('simo')}
-              className={`flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold transition-all ${
+              className={`flex items-center gap-1 px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold transition-all ${
                 currentUserId === 'simo'
                   ? 'bg-gradient-to-r from-rose-600 to-pink-600 text-white shadow-sm'
                   : 'text-slate-400 hover:text-white'
               }`}
+              title="هاتف سيمو"
             >
               <span className="w-1.5 h-1.5 rounded-full bg-rose-300" />
-              سيمو 👑
+              <span>سيمو 👑</span>
+              {lockDeviceRole && currentUserId === 'simo' && (
+                <Lock className="w-2.5 h-2.5 text-rose-200 hidden xs:inline" />
+              )}
             </button>
           </div>
 
           {/* Top Quick Actions */}
           <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-            {/* Spontaneous Ping (hidden on smallest screens to preserve layout) */}
+            {/* Settings & Edit everything button */}
             <button
-              onClick={onOpenSpontaneousPings}
-              className="hidden xs:flex p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-slate-900 border border-white/10 hover:border-rose-500/50 text-slate-200 hover:text-rose-300 text-xs font-semibold transition items-center gap-1 shadow active:scale-95"
-              title="منبه عشوائي وإشعار حب مفاجئ"
+              onClick={() => onTabChange('settings')}
+              className={`p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl border text-xs font-bold transition flex items-center gap-1 active:scale-95 ${
+                activeTab === 'settings'
+                  ? 'bg-purple-600 text-white border-purple-400 shadow-md'
+                  : 'bg-slate-900 border-white/10 text-slate-300 hover:text-white hover:border-purple-500/40'
+              }`}
+              title="تعديل التطبيق بالكامل (خانة التعديل والتحكم)"
             >
-              <BellRing className="w-3.5 h-3.5 text-rose-400" />
-              <span className="hidden md:inline">منبه حب</span>
+              <Settings className="w-3.5 h-3.5 text-purple-400" />
+              <span className="hidden sm:inline">تعديل التطبيق ⚙️</span>
             </button>
 
             {/* Good News Trigger */}
@@ -113,7 +139,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span className="hidden sm:inline">فرحة 🎉</span>
             </button>
 
-            {/* Emergency SOS Button (Always prominent and compact) */}
+            {/* Emergency SOS Button */}
             <button
               onClick={onTriggerEmergency}
               className="px-2 sm:px-3 py-1.5 rounded-xl bg-gradient-to-r from-red-600 to-rose-700 hover:from-red-500 text-white text-xs font-black transition shadow-md shadow-red-900/40 flex items-center gap-1 animate-pulse active:scale-95"
@@ -125,7 +151,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         </div>
 
-        {/* Desktop / Tablet Navigation Tabs (Smooth Scroll on mid sizes) */}
+        {/* Desktop / Tablet Navigation Tabs */}
         <div className="hidden sm:block max-w-7xl mx-auto px-4 border-t border-white/5">
           <nav className="flex items-center gap-2 py-1.5 overflow-x-auto no-scrollbar">
             {/* 1. Notifications */}
@@ -210,16 +236,29 @@ export const Navbar: React.FC<NavbarProps> = ({
               <Navigation className="w-3.5 h-3.5 text-rose-400" />
               <span>المشاوير والـ GPS</span>
             </button>
+
+            {/* 7. Settings / Edit All */}
+            <button
+              onClick={() => onTabChange('settings')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition whitespace-nowrap active:scale-95 ${
+                activeTab === 'settings'
+                  ? 'bg-purple-600/30 text-purple-200 border border-purple-500/60 shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+              }`}
+            >
+              <Settings className="w-3.5 h-3.5 text-purple-400" />
+              <span>تعديل التطبيق ⚙️</span>
+            </button>
           </nav>
         </div>
       </header>
 
-      {/* DEDICATED MOBILE BOTTOM NAVIGATION DOCK (Native App Feel on Smartphones) */}
+      {/* DEDICATED MOBILE BOTTOM NAVIGATION DOCK (7 Tabs: Notifications, Chat, Love, Milestones, Questions, GPS, Settings) */}
       <nav
         aria-label="التنقل الرئيسي"
         className="fixed bottom-0 inset-x-0 z-40 bg-slate-950/95 backdrop-blur-2xl border-t border-white/10 sm:hidden shadow-2xl safe-area-pb"
       >
-        <div className="grid grid-cols-6 h-14 items-center px-1">
+        <div className="grid grid-cols-7 h-14 items-center px-0.5">
           {/* 1. Notifications */}
           <button
             onClick={() => onTabChange('notifications')}
@@ -228,7 +267,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             }`}
           >
             <BellRing className={`w-4 h-4 ${activeTab === 'notifications' ? 'stroke-[2.5]' : ''}`} />
-            <span className="text-[10px] mt-0.5">الإشعارات</span>
+            <span className="text-[9px] mt-0.5">المنبه</span>
             {activeTab === 'notifications' && (
               <span className="absolute bottom-0.5 w-1 h-1 rounded-full bg-rose-500" />
             )}
@@ -242,7 +281,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             }`}
           >
             <MessageCircle className={`w-4 h-4 ${activeTab === 'chat' ? 'stroke-[2.5]' : ''}`} />
-            <span className="text-[10px] mt-0.5">الشات</span>
+            <span className="text-[9px] mt-0.5">الشات</span>
             {activeTab === 'chat' && (
               <span className="absolute bottom-0.5 w-1 h-1 rounded-full bg-pink-500" />
             )}
@@ -256,7 +295,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             }`}
           >
             <Gift className={`w-4 h-4 ${activeTab === 'love' ? 'stroke-[2.5]' : ''}`} />
-            <span className="text-[10px] mt-0.5">{loveMeter}% الحب</span>
+            <span className="text-[9px] mt-0.5">{loveMeter}%</span>
             {activeTab === 'love' && (
               <span className="absolute bottom-0.5 w-1 h-1 rounded-full bg-rose-500" />
             )}
@@ -270,7 +309,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             }`}
           >
             <Calendar className={`w-4 h-4 ${activeTab === 'milestones' ? 'stroke-[2.5]' : ''}`} />
-            <span className="text-[10px] mt-0.5">المناسبات</span>
+            <span className="text-[9px] mt-0.5">المناسبات</span>
             {activeTab === 'milestones' && (
               <span className="absolute bottom-0.5 w-1 h-1 rounded-full bg-purple-500" />
             )}
@@ -284,7 +323,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             }`}
           >
             <HelpCircle className={`w-4 h-4 ${activeTab === 'questions' ? 'stroke-[2.5]' : ''}`} />
-            <span className="text-[10px] mt-0.5">الأسئلة</span>
+            <span className="text-[9px] mt-0.5">الأسئلة</span>
             {activeTab === 'questions' && (
               <span className="absolute bottom-0.5 w-1 h-1 rounded-full bg-teal-500" />
             )}
@@ -298,9 +337,23 @@ export const Navbar: React.FC<NavbarProps> = ({
             }`}
           >
             <Navigation className={`w-4 h-4 ${activeTab === 'gps' ? 'stroke-[2.5]' : ''}`} />
-            <span className="text-[10px] mt-0.5">المشاوير</span>
+            <span className="text-[9px] mt-0.5">GPS</span>
             {activeTab === 'gps' && (
               <span className="absolute bottom-0.5 w-1 h-1 rounded-full bg-rose-500" />
+            )}
+          </button>
+
+          {/* 7. Settings / Edit Everything */}
+          <button
+            onClick={() => onTabChange('settings')}
+            className={`flex flex-col items-center justify-center py-1 transition relative ${
+              activeTab === 'settings' ? 'text-purple-400 font-bold' : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <Settings className={`w-4 h-4 ${activeTab === 'settings' ? 'stroke-[2.5]' : ''}`} />
+            <span className="text-[9px] mt-0.5">تعديل ⚙️</span>
+            {activeTab === 'settings' && (
+              <span className="absolute bottom-0.5 w-1 h-1 rounded-full bg-purple-500" />
             )}
           </button>
         </div>

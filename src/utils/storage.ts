@@ -266,6 +266,14 @@ export const INITIAL_PAIRING: CouplePairing = {
   partnerName: 'سيمو',
 };
 
+export const DEFAULT_SETTINGS = {
+  relationshipStartDate: '2024-03-15',
+  appTitle: 'الامـان',
+  subtitle: 'حمودي & سيمو 🤍',
+  lockDeviceRole: true,
+  notifyWhenPartnerOpens: true,
+};
+
 
 export const SPONTANEOUS_PINGS_SUGGESTIONS = [
   {

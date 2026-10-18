@@ -8,6 +8,7 @@ import {
   INITIAL_PINGS,
   INITIAL_SCHEDULED_ALARMS,
   INITIAL_PAIRING,
+  DEFAULT_SETTINGS,
   MYSTERY_REWARDS,
   broadcastAppEvent,
   subscribeToAppEvents,
@@ -25,6 +26,7 @@ import {
   SpontaneousPing,
   ScheduledAlarm,
   CouplePairing,
+  AppSettings,
 } from './types';
 import { Navbar, AppTabType } from './components/Navbar';
 import { NotificationsView } from './components/NotificationsView';
@@ -33,6 +35,7 @@ import { ChatView } from './components/ChatView';
 import { LoveMeterView } from './components/LoveMeterView';
 import { MilestonesView } from './components/MilestonesView';
 import { QuestionsView } from './components/QuestionsView';
+import { SettingsEditView } from './components/SettingsEditView';
 import { EmergencyModal } from './components/EmergencyModal';
 import { GoodNewsModal } from './components/GoodNewsModal';
 import { SpontaneousPingsModal } from './components/SpontaneousPingsModal';
@@ -45,7 +48,25 @@ export default function App() {
     const saved = localStorage.getItem('el_aman_users');
     return saved ? JSON.parse(saved) : DEFAULT_USERS;
   });
-  const [currentUserId, setCurrentUserId] = useState<UserId>('hamoudi');
+
+  // Comprehensive App Settings
+  const [settings, setSettings] = useState<AppSettings>(() => {
+    const saved = localStorage.getItem('el_aman_settings');
+    return saved ? JSON.parse(saved) : DEFAULT_SETTINGS;
+  });
+
+  // Dedicated Device Identity (Persistent role on this phone: Hamoudi or Simo)
+  const [currentUserId, setCurrentUserId] = useState<UserId>(() => {
+    const params = new URLSearchParams(window.location.search);
+    const partnerRole = params.get('partner') || params.get('role');
+    if (partnerRole === 'simo') return 'simo';
+    if (partnerRole === 'hamoudi') return 'hamoudi';
+    const savedRole = localStorage.getItem('el_aman_device_role');
+    return savedRole === 'simo' || savedRole === 'hamoudi' ? savedRole : 'hamoudi';
+  });
+
+  // Live partner online status
+  const [isPartnerOnline, setIsPartnerOnline] = useState<boolean>(false);
 
   // Navigation tab: Starts with 'notifications' first as requested by the user!
   const [activeTab, setActiveTab] = useState<AppTabType>('notifications');
@@ -174,6 +195,28 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('el_aman_rewards', JSON.stringify(mysteryRewards));
   }, [mysteryRewards]);
+  useEffect(() => {
+    localStorage.setItem('el_aman_settings', JSON.stringify(settings));
+  }, [settings]);
+  useEffect(() => {
+    localStorage.setItem('el_aman_device_role', currentUserId);
+  }, [currentUserId]);
+
+  // Broadcast live presence when user opens the app (e.g. when Simo opens the app)
+  useEffect(() => {
+    const timeStr = new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+    if (currentUserId === 'simo') {
+      broadcastAppEvent('SIMO_OPENED_APP', {
+        time: timeStr,
+        userName: users.simo.name,
+      });
+    } else {
+      broadcastAppEvent('HAMOUDI_OPENED_APP', {
+        time: timeStr,
+        userName: users.hamoudi.name,
+      });
+    }
+  }, [currentUserId, users.simo.name, users.hamoudi.name]);
 
   // Background timer checker for clock-time scheduled alarms
   useEffect(() => {
@@ -243,6 +286,27 @@ export default function App() {
           `💌 ${payload.answeredByName} جاوب ع السؤال!`,
           `"${payload.answerText.slice(0, 50)}..."`
         );
+      } else if (type === 'SIMO_OPENED_APP') {
+        setIsPartnerOnline(true);
+        if (currentUserId === 'hamoudi') {
+          playGoodNewsChime();
+          showToast(`🌸 ${payload.userName || 'سيمو'} فتحت التطبيق دلوقتي!`, 'حبيبتك متصلة بيك الآن في مساحتكم الخاصة 🤍', '🟢');
+          const ping: SpontaneousPing = {
+            id: `online-${Date.now()}`,
+            senderId: 'simo',
+            title: `🌸 ${payload.userName || 'سيمو'} فتحت التطبيق وبقت أونلاين معاك!`,
+            message: 'فتحت تطبيق الأمان الآن وبدأت تتصفح مساحتكم الخاصة 🤍',
+            type: 'love_ping',
+            timestamp: payload.time || 'الآن',
+          };
+          setPingsHistory((prev) => [ping, ...prev]);
+        }
+      } else if (type === 'HAMOUDI_OPENED_APP') {
+        setIsPartnerOnline(true);
+        if (currentUserId === 'simo') {
+          playGoodNewsChime();
+          showToast(`🤍 ${payload.userName || 'حمودي'} فتح التطبيق دلوقتي!`, 'حبيبك متصل بيكي الآن 📱', '🟢');
+        }
       }
     });
 
@@ -502,8 +566,13 @@ export default function App() {
         partnerUser={partnerUser}
         activeTab={activeTab}
         onTabChange={setActiveTab}
-        onSwitchUser={setCurrentUserId}
+        onSwitchUser={(id) => {
+          setCurrentUserId(id);
+          localStorage.setItem('el_aman_device_role', id);
+        }}
         loveMeter={loveMeter}
+        lockDeviceRole={settings.lockDeviceRole}
+        isPartnerOnline={isPartnerOnline}
         onTriggerEmergency={handleTriggerEmergency}
         onTriggerGoodNews={() => setShowGoodNewsPicker(true)}
         onOpenSpontaneousPings={() => setShowSpontaneousModal(true)}
@@ -588,6 +657,7 @@ export default function App() {
             currentUser={currentUser}
             partnerUser={partnerUser}
             milestones={milestones}
+            relationshipStartDate={settings.relationshipStartDate}
             onAddMilestone={(m) =>
               setMilestones((prev) => [{ ...m, id: `m-${Date.now()}` }, ...prev])
             }
@@ -623,6 +693,58 @@ export default function App() {
             onUpdateMyLocation={handleUpdateMyLocation}
             onSendSafeArrival={handleSendSafeArrival}
             onRequestCall={() => handleSimulateCall(partnerUser)}
+          />
+        )}
+
+        {/* TAB 7: SETTINGS & FULL EDIT PANEL (تعديل التطبيق بالكامل) */}
+        {activeTab === 'settings' && (
+          <SettingsEditView
+            currentUserId={currentUserId}
+            users={users}
+            settings={settings}
+            pairing={pairing}
+            mysteryRewards={mysteryRewards}
+            onUpdateUsers={setUsers}
+            onUpdateSettings={setSettings}
+            onUpdatePairing={setPairing}
+            onUpdateMysteryRewards={setMysteryRewards}
+            onSwitchDeviceUser={(newRole) => {
+              setCurrentUserId(newRole);
+              localStorage.setItem('el_aman_device_role', newRole);
+              showToast(
+                `تم ضبط هذا الهاتف باسم: ${newRole === 'hamoudi' ? users.hamoudi.name : users.simo.name} 📱`,
+                'تم حفظ هوية هذا الجهاز بنجاح'
+              );
+            }}
+            onSimulatePartnerOpenApp={() => {
+              setIsPartnerOnline(true);
+              playGoodNewsChime();
+              showToast('🌸 سيمو فتحت التطبيق دلوقتي!', 'سيمو متصلة بيك الآن في مساحتكم الخاصة 🤍', '🟢');
+              const onlinePing: SpontaneousPing = {
+                id: `online-${Date.now()}`,
+                senderId: 'simo',
+                title: '🌸 سيمو فتحت التطبيق وبقت أونلاين معاك!',
+                message: 'سيمو فتحت تطبيق الأمان الآن وبدأت تتصفح مساحتكم الخاصة 🤍',
+                type: 'love_ping',
+                timestamp: 'الآن',
+              };
+              setPingsHistory((prev) => [onlinePing, ...prev]);
+            }}
+            onResetAllData={() => {
+              setUsers(DEFAULT_USERS);
+              setLocations(DEFAULT_LOCATIONS);
+              setMessages(INITIAL_MESSAGES);
+              setPingsHistory(INITIAL_PINGS);
+              setScheduledAlarms(INITIAL_SCHEDULED_ALARMS);
+              setPairing(INITIAL_PAIRING);
+              setSettings(DEFAULT_SETTINGS);
+              setLoveMeter(85);
+              setMilestones(INITIAL_MILESTONES);
+              setQuestions(INITIAL_QUESTIONS);
+              setMysteryRewards(MYSTERY_REWARDS);
+              localStorage.clear();
+              showToast('تمت استعادة الإعدادات الأصلية بنجاح 🔄', 'تمت إعادة تعيين البيانات للافتراضية');
+            }}
           />
         )}
       </main>

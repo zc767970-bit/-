@@ -119,4 +119,12 @@ export interface CouplePairing {
   partnerName: string;
 }
 
+export interface AppSettings {
+  relationshipStartDate: string;
+  appTitle: string;
+  subtitle: string;
+  lockDeviceRole: boolean;
+  notifyWhenPartnerOpens: boolean;
+}
+
 

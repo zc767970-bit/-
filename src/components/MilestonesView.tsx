@@ -18,6 +18,7 @@ interface MilestonesViewProps {
   currentUser: UserProfile;
   partnerUser: UserProfile;
   milestones: Milestone[];
+  relationshipStartDate?: string;
   onAddMilestone: (m: Omit<Milestone, 'id'>) => void;
   onUpdateMilestone: (m: Milestone) => void;
   onDeleteMilestone: (id: string) => void;
@@ -28,6 +29,7 @@ export const MilestonesView: React.FC<MilestonesViewProps> = ({
   currentUser,
   partnerUser,
   milestones,
+  relationshipStartDate = '2024-03-15',
   onAddMilestone,
   onUpdateMilestone,
   onDeleteMilestone,
@@ -44,7 +46,7 @@ export const MilestonesView: React.FC<MilestonesViewProps> = ({
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Calculate days in love (since first milestone or start date)
-  const startDate = new Date('2024-03-15');
+  const startDate = new Date(relationshipStartDate);
   const today = new Date();
   const diffTime = Math.abs(today.getTime() - startDate.getTime());
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));

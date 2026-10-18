@@ -50,7 +50,7 @@ interface NotificationsViewProps {
   onTriggerGoodNews: () => void;
   onTriggerEmergency: () => void;
   onSendSafeArrival: () => void;
-  onGoToTab: (tab: 'gps' | 'chat' | 'love' | 'milestones' | 'questions') => void;
+  onGoToTab: (tab: 'gps' | 'chat' | 'love' | 'milestones' | 'questions' | 'settings') => void;
 }
 
 // Convert 24h "HH:mm" to 12h Arabic string
@@ -855,6 +855,12 @@ export const NotificationsView: React.FC<NotificationsViewProps> = ({
           >
             <MapPin className="w-3 h-3 text-rose-400" />
             الـ GPS
+          </button>
+          <button
+            onClick={() => onGoToTab('settings')}
+            className="px-2.5 py-1 rounded-xl bg-purple-900/40 hover:bg-purple-800 text-purple-200 text-xs transition flex items-center gap-1 border border-purple-500/30 font-bold"
+          >
+            ⚙️ تعديل التطبيق
           </button>
         </div>
       </div>
